@@ -2,6 +2,7 @@ import { and, asc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { camisetas, criancas, participantes } from "@/lib/db/schema";
 import { phoneDigits } from "@/lib/phone-mask";
+import { normalizePagamentoTipo, normalizeValorPago } from "@/lib/pagamento";
 import { isSearchActive, MIN_SEARCH_LENGTH } from "@/lib/search";
 import type {
   Camiseta,
@@ -21,7 +22,8 @@ function mapParticipante(row: typeof participantes.$inferSelect): Participante {
     eventoId: row.eventoId,
     nome: row.nome,
     telefone: row.telefone,
-    pagamentoInscricao: row.pagamentoInscricao,
+    pagamentoInscricao: normalizePagamentoTipo(row.pagamentoInscricao),
+    valorInscricao: row.valorInscricao ?? undefined,
     ehServidor: row.ehServidor,
     observacoes: row.observacoes ?? undefined,
     checkin: row.checkin,
@@ -39,7 +41,8 @@ function mapCamiseta(row: typeof camisetas.$inferSelect): Camiseta {
     quantidade: row.quantidade,
     tamanho: row.tamanho,
     idadeToddler: row.idadeToddler ?? undefined,
-    pagamento: row.pagamento,
+    pagamento: normalizePagamentoTipo(row.pagamento),
+    valorPago: row.valorPago ?? undefined,
   };
 }
 
@@ -49,6 +52,8 @@ function mapCrianca(row: typeof criancas.$inferSelect): Crianca {
     participanteId: row.participanteId,
     nome: row.nome,
     idade: row.idade,
+    pagamento: normalizePagamentoTipo(row.pagamento),
+    valorPago: row.valorPago ?? undefined,
   };
 }
 
@@ -117,6 +122,7 @@ async function syncCamisetas(
       tamanho: item.tamanho,
       idadeToddler: item.idadeToddler,
       pagamento: item.pagamento,
+      valorPago: normalizeValorPago(item.pagamento, item.valorPago),
     }))
   );
 }
@@ -132,6 +138,8 @@ async function syncCriancas(participanteId: string, items: ParticipanteInput["cr
       participanteId,
       nome: item.nome,
       idade: item.idade,
+      pagamento: item.pagamento,
+      valorPago: normalizeValorPago(item.pagamento, item.valorPago),
     }))
   );
 }
@@ -188,6 +196,7 @@ export class PostgresParticipanteRepository implements IParticipanteRepository {
         nome: data.nome,
         telefone: data.telefone,
         pagamentoInscricao: data.pagamentoInscricao,
+        valorInscricao: normalizeValorPago(data.pagamentoInscricao, data.valorInscricao),
         ehServidor: data.ehServidor,
         observacoes: data.observacoes,
         checkin: false,
@@ -213,6 +222,7 @@ export class PostgresParticipanteRepository implements IParticipanteRepository {
         nome: data.nome,
         telefone: data.telefone,
         pagamentoInscricao: data.pagamentoInscricao,
+        valorInscricao: normalizeValorPago(data.pagamentoInscricao, data.valorInscricao),
         ehServidor: data.ehServidor,
         observacoes: data.observacoes,
         atualizadoEm: new Date().toISOString(),

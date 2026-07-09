@@ -32,7 +32,19 @@ export async function GET(request: Request, context: RouteContext) {
         `Cash Inscrição,${relatorio.cashInscricao}`,
         `Venmo Inscrição,${relatorio.venmoInscricao}`,
         `Não Pagos Inscrição,${relatorio.naoPagosInscricao}`,
-        `Doação (free),${relatorio.doacaoInscricao}`,
+        `Free Inscrição,${relatorio.freeInscricao}`,
+        "",
+        "Financeiro",
+        `Total Valor Inscrição,${relatorio.totalValorInscricao.toFixed(2)}`,
+        `Total Valor Camiseta,${relatorio.totalValorCamiseta.toFixed(2)}`,
+        `Total Dinheiro,${relatorio.totalDinheiro.toFixed(2)}`,
+        `Total Venmo,${relatorio.totalVenmo.toFixed(2)}`,
+        `Total Geral,${relatorio.totalGeral.toFixed(2)}`,
+        "",
+        "Camisetas por pagamento",
+        `Pagas,${relatorio.camisetasPagas}`,
+        `Não pagas,${relatorio.camisetasNaoPagas}`,
+        `Free,${relatorio.camisetasFree}`,
       ];
 
       return new Response(lines.join("\n"), {

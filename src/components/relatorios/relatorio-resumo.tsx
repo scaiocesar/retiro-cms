@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { Download, Shirt, UsersRound } from "lucide-react";
+import { Download, DollarSign, Shirt, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckinChart } from "@/components/relatorios/checkin-chart";
 import { PagamentoChart } from "@/components/relatorios/pagamento-chart";
+import { formatCurrency } from "@/lib/financeiro";
 import type { RelatorioEvento } from "@/lib/types";
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
@@ -15,17 +16,23 @@ function MiniStat({
   value,
   sublabel,
   valueClassName,
+  format = "number",
 }: {
   label: string;
   value: number;
   sublabel?: string;
   valueClassName?: string;
+  format?: "number" | "currency";
 }) {
+  const displayValue = format === "currency" ? formatCurrency(value) : value;
+
   return (
     <div className="rounded-lg border bg-card px-3 py-2.5 text-center">
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
       {sublabel && <p className="text-[10px] text-muted-foreground">{sublabel}</p>}
-      <p className={`mt-0.5 text-xl font-bold ${valueClassName ?? ""}`}>{value}</p>
+      <p className={`mt-0.5 text-xl font-bold tabular-nums ${valueClassName ?? ""}`}>
+        {displayValue}
+      </p>
     </div>
   );
 }
@@ -137,10 +144,9 @@ export function RelatorioResumo({
                 valueClassName="text-destructive"
               />
               <MiniStat
-                label="Doação"
-                sublabel="Free"
-                value={relatorio.doacaoInscricao}
-                valueClassName="text-purple-600"
+                label="Free"
+                value={relatorio.freeInscricao}
+                valueClassName="text-slate-600"
               />
             </div>
 
@@ -149,14 +155,57 @@ export function RelatorioResumo({
                 cash={relatorio.cashInscricao}
                 venmo={relatorio.venmoInscricao}
                 naoPagos={relatorio.naoPagosInscricao}
-                doacao={relatorio.doacaoInscricao}
+                free={relatorio.freeInscricao}
               />
             </div>
           </CardContent>
         </Card>
       </section>
 
-      {/* 3. Camisetas */}
+      {/* 3. Financeiro */}
+      <section className="space-y-3">
+        <SectionTitle>Financeiro</SectionTitle>
+        <Card>
+          <CardContent className="space-y-6 pt-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
+              <div className="flex flex-col items-center justify-center rounded-xl border-2 border-primary/20 bg-primary/5 px-6 py-5 sm:min-w-[148px] sm:px-8">
+                <DollarSign className="mb-2 h-5 w-5 text-primary" />
+                <p className="text-3xl font-bold leading-none tabular-nums sm:text-4xl">
+                  {formatCurrency(relatorio.totalGeral)}
+                </p>
+                <p className="mt-2 text-sm font-medium text-muted-foreground">Total geral</p>
+              </div>
+
+              <div className="grid flex-1 grid-cols-2 gap-3 sm:grid-cols-2">
+                <MiniStat
+                  label="Valor inscrição"
+                  value={relatorio.totalValorInscricao}
+                  format="currency"
+                />
+                <MiniStat
+                  label="Valor camiseta"
+                  value={relatorio.totalValorCamiseta}
+                  format="currency"
+                />
+                <MiniStat
+                  label="Total dinheiro"
+                  value={relatorio.totalDinheiro}
+                  format="currency"
+                  valueClassName="text-success"
+                />
+                <MiniStat
+                  label="Total Venmo"
+                  value={relatorio.totalVenmo}
+                  format="currency"
+                  valueClassName="text-blue-600"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* 4. Camisetas */}
       <section className="space-y-3">
         <SectionTitle>Camisetas</SectionTitle>
         <Card>
@@ -185,6 +234,27 @@ export function RelatorioResumo({
                     </div>
                   )}
                 </CardContent>
+              </div>
+            </div>
+
+            <div className="border-t pt-6">
+              <p className="mb-4 text-sm font-medium text-muted-foreground">Pagamento</p>
+              <div className="grid grid-cols-3 gap-3">
+                <MiniStat
+                  label="Pagas"
+                  value={relatorio.camisetasPagas}
+                  valueClassName="text-success"
+                />
+                <MiniStat
+                  label="Não pagas"
+                  value={relatorio.camisetasNaoPagas}
+                  valueClassName="text-destructive"
+                />
+                <MiniStat
+                  label="Free"
+                  value={relatorio.camisetasFree}
+                  valueClassName="text-slate-600"
+                />
               </div>
             </div>
           </CardContent>

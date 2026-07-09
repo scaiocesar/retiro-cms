@@ -1,8 +1,10 @@
 export type UserRole = "ADMIN" | "USUARIO";
 
-export type PagamentoInscricao = "NAO" | "CASH" | "VENMO" | "DOACAO";
+import type { PagamentoTipo } from "@/lib/pagamento";
 
-export type PagamentoCamiseta = "NAO" | "CASH" | "VENMO" | "DOACAO";
+export type PagamentoInscricao = PagamentoTipo;
+export type PagamentoCamiseta = PagamentoTipo;
+export type PagamentoCrianca = PagamentoTipo;
 
 export type TamanhoCamiseta =
   | "TODDLER"
@@ -49,6 +51,7 @@ export interface Camiseta {
   tamanho: TamanhoCamiseta;
   idadeToddler?: number;
   pagamento: PagamentoCamiseta;
+  valorPago?: number;
 }
 
 export interface Crianca {
@@ -56,6 +59,8 @@ export interface Crianca {
   participanteId: string;
   nome: string;
   idade: number;
+  pagamento: PagamentoCrianca;
+  valorPago?: number;
 }
 
 export interface Participante {
@@ -64,6 +69,7 @@ export interface Participante {
   nome: string;
   telefone: string;
   pagamentoInscricao: PagamentoInscricao;
+  valorInscricao?: number;
   ehServidor: boolean;
   observacoes?: string;
   checkin: boolean;
@@ -89,7 +95,15 @@ export interface RelatorioEvento {
   cashInscricao: number;
   venmoInscricao: number;
   naoPagosInscricao: number;
-  doacaoInscricao: number;
+  freeInscricao: number;
+  totalValorInscricao: number;
+  totalValorCamiseta: number;
+  totalDinheiro: number;
+  totalVenmo: number;
+  totalGeral: number;
+  camisetasPagas: number;
+  camisetasNaoPagas: number;
+  camisetasFree: number;
   camisetasPorTamanho: Record<string, number>;
   listaCamisetas: Array<{
     participanteNome: string;
@@ -100,19 +114,11 @@ export interface RelatorioEvento {
   }>;
 }
 
-export const PAGAMENTO_INSCRICAO_LABELS: Record<PagamentoInscricao, string> = {
-  NAO: "Não pago",
-  CASH: "Cash",
-  VENMO: "Venmo",
-  DOACAO: "Doação",
-};
+import { PAGAMENTO_LABELS } from "@/lib/pagamento";
 
-export const PAGAMENTO_CAMISETA_LABELS: Record<PagamentoCamiseta, string> = {
-  NAO: "Não pago",
-  CASH: "Cash",
-  VENMO: "Venmo",
-  DOACAO: "Doação",
-};
+export const PAGAMENTO_INSCRICAO_LABELS = PAGAMENTO_LABELS;
+export const PAGAMENTO_CAMISETA_LABELS = PAGAMENTO_LABELS;
+export const PAGAMENTO_CRIANCA_LABELS = PAGAMENTO_LABELS;
 
 export const TAMANHO_CAMISETA_LABELS: Record<TamanhoCamiseta, string> = {
   TODDLER: "Toddler",

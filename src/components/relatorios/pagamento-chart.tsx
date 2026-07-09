@@ -6,7 +6,7 @@ const COLORS = {
   cash: "#16a34a",
   venmo: "#2563eb",
   naoPagos: "#dc2626",
-  doacao: "#9333ea",
+  free: "#64748b",
 };
 
 function pct(value: number, total: number) {
@@ -17,20 +17,20 @@ export function PagamentoChart({
   cash,
   venmo,
   naoPagos,
-  doacao,
+  free,
   className,
 }: {
   cash: number;
   venmo: number;
   naoPagos: number;
-  doacao: number;
+  free: number;
   className?: string;
 }) {
-  const total = cash + venmo + naoPagos + doacao;
+  const total = cash + venmo + naoPagos + free;
   const pctCash = pct(cash, total);
   const pctVenmo = pct(venmo, total);
   const pctNaoPagos = pct(naoPagos, total);
-  const pctDoacao = pct(doacao, total);
+  const pctFree = pct(free, total);
 
   const endCash = pctCash;
   const endVenmo = pctCash + pctVenmo;
@@ -38,14 +38,14 @@ export function PagamentoChart({
 
   const conicGradient =
     total > 0
-      ? `conic-gradient(${COLORS.cash} 0% ${endCash}%, ${COLORS.venmo} ${endCash}% ${endVenmo}%, ${COLORS.naoPagos} ${endVenmo}% ${endNaoPagos}%, ${COLORS.doacao} ${endNaoPagos}% 100%)`
+      ? `conic-gradient(${COLORS.cash} 0% ${endCash}%, ${COLORS.venmo} ${endCash}% ${endVenmo}%, ${COLORS.naoPagos} ${endVenmo}% ${endNaoPagos}%, ${COLORS.free} ${endNaoPagos}% 100%)`
       : "#e2e8f0";
 
   const items = [
     { label: "Cash", value: cash, pct: pctCash, color: COLORS.cash },
     { label: "Venmo", value: venmo, pct: pctVenmo, color: COLORS.venmo },
     { label: "Não pagos", value: naoPagos, pct: pctNaoPagos, color: COLORS.naoPagos },
-    { label: "Doação (free)", value: doacao, pct: pctDoacao, color: COLORS.doacao },
+    { label: "Free", value: free, pct: pctFree, color: COLORS.free },
   ];
 
   return (

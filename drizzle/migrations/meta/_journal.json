@@ -15,6 +15,20 @@
       "when": 1740000001000,
       "tag": "0001_username",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1740000002000,
+      "tag": "0002_payment_values",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1740000003000,
+      "tag": "0003_remove_doacao",
+      "breakpoints": true
     }
   ]
 }

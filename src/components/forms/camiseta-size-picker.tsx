@@ -4,26 +4,16 @@ import { Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { PagamentoSelectValor } from "@/components/forms/pagamento-select-valor";
 import { cn } from "@/lib/utils";
-import {
-  PAGAMENTO_CAMISETA_LABELS,
-  TAMANHO_CAMISETA_LABELS,
-  type PagamentoCamiseta,
-  type TamanhoCamiseta,
-} from "@/lib/types";
+import { TAMANHO_CAMISETA_LABELS, type PagamentoCamiseta, type TamanhoCamiseta } from "@/lib/types";
 
 export interface CamisetaFormItem {
   quantidade: number;
   tamanho: TamanhoCamiseta;
   idadeToddler?: number;
   pagamento: PagamentoCamiseta;
+  valorPago?: number;
 }
 
 const GRID_SIZES: TamanhoCamiseta[] = [
@@ -40,6 +30,7 @@ const GRID_SIZES: TamanhoCamiseta[] = [
 export interface CamisetasPickerValue {
   quantities: Record<TamanhoCamiseta, number>;
   pagamento: PagamentoCamiseta;
+  valorPago?: number;
   toddlerIdades: (number | undefined)[];
 }
 
@@ -49,9 +40,11 @@ export function camisetasToPickerValue(
   const quantities = emptyQuantities();
   const toddlerIdades: (number | undefined)[] = [];
   let pagamento: PagamentoCamiseta = "NAO";
+  let valorPago: number | undefined;
 
   for (const c of camisetas) {
     if (c.pagamento !== "NAO") pagamento = c.pagamento;
+    if (c.valorPago !== undefined) valorPago = c.valorPago;
 
     if (c.tamanho === "TODDLER") {
       for (let i = 0; i < c.quantidade; i++) {
@@ -64,7 +57,7 @@ export function camisetasToPickerValue(
 
   quantities.TODDLER = toddlerIdades.length;
 
-  return { quantities, pagamento, toddlerIdades };
+  return { quantities, pagamento, valorPago, toddlerIdades };
 }
 
 export function pickerValueToCamisetas(value: CamisetasPickerValue): CamisetaFormItem[] {
@@ -77,6 +70,7 @@ export function pickerValueToCamisetas(value: CamisetasPickerValue): CamisetaFor
         quantidade: qty,
         tamanho,
         pagamento: value.pagamento,
+        valorPago: value.valorPago,
       });
     }
   }
@@ -87,6 +81,7 @@ export function pickerValueToCamisetas(value: CamisetasPickerValue): CamisetaFor
       tamanho: "TODDLER",
       idadeToddler: idade,
       pagamento: value.pagamento,
+      valorPago: value.valorPago,
     });
   }
 
@@ -231,7 +226,7 @@ export function CamisetaSizePicker({
                 <Input
                   type="number"
                   min={1}
-                  max={6}
+                  max={15}
                   value={idade ?? ""}
                   onChange={(e) =>
                     updateToddlerIdade(
@@ -250,27 +245,23 @@ export function CamisetaSizePicker({
       </div>
 
       {totalCamisetas > 0 && (
-        <div className="space-y-2">
-          <Label>Pagamento camisetas</Label>
-          <Select
-            value={value.pagamento}
-            onValueChange={(v) =>
-              onChange({ ...value, pagamento: v as PagamentoCamiseta })
-            }
-            disabled={readOnly}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(PAGAMENTO_CAMISETA_LABELS).map(([k, label]) => (
-                <SelectItem key={k} value={k}>
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <PagamentoSelectValor
+          pagamentoLabel="Pagamento camisetas"
+          pagamento={value.pagamento}
+          valorPago={value.valorPago}
+          onPagamentoChange={(pagamento) =>
+            onChange({
+              ...value,
+              pagamento,
+              valorPago:
+                pagamento === "NAO" || pagamento === "FREE" ? undefined : value.valorPago,
+            })
+          }
+          onValorChange={(valorPago) => onChange({ ...value, valorPago })}
+          readOnly={readOnly}
+          pagamentoId="pagamento-camisetas"
+          valorId="valor-camisetas"
+        />
       )}
 
       {totalCamisetas > 0 && (

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isValidPhone } from "@/lib/phone-mask";
+import { PAGAMENTO_TIPOS } from "@/lib/pagamento";
 
 const usernameField = z
   .string()
@@ -7,6 +8,10 @@ const usernameField = z
   .max(32, "Usuário deve ter no máximo 32 caracteres")
   .regex(/^[a-zA-Z0-9_]+$/, "Use apenas letras, números e underscore")
   .transform((value) => value.toLowerCase());
+
+const pagamentoField = z.enum(PAGAMENTO_TIPOS);
+
+const valorPagoField = z.number().min(0, "Valor inválido").optional();
 
 export const loginSchema = z.object({
   username: usernameField,
@@ -41,8 +46,9 @@ export const camisetaInputSchema = z
       "3XL",
       "4XL",
     ]),
-    idadeToddler: z.number().int().min(1).max(6).optional(),
-    pagamento: z.enum(["NAO", "CASH", "VENMO", "DOACAO"]),
+    idadeToddler: z.number().int().min(1).max(15).optional(),
+    pagamento: pagamentoField,
+    valorPago: valorPagoField,
   })
   .refine(
     (data) => data.tamanho !== "TODDLER" || (data.idadeToddler !== undefined && data.idadeToddler >= 1),
@@ -52,6 +58,8 @@ export const camisetaInputSchema = z
 export const criancaInputSchema = z.object({
   nome: z.string().min(1, "Nome obrigatório"),
   idade: z.number().int().min(0).max(17),
+  pagamento: pagamentoField.default("NAO"),
+  valorPago: valorPagoField,
 });
 
 export const participanteSchema = z.object({
@@ -60,7 +68,8 @@ export const participanteSchema = z.object({
   telefone: z
     .string()
     .refine(isValidPhone, "Telefone inválido. Use o formato (123)456-7890"),
-  pagamentoInscricao: z.enum(["NAO", "CASH", "VENMO", "DOACAO"]),
+  pagamentoInscricao: pagamentoField,
+  valorInscricao: valorPagoField,
   ehServidor: z.boolean(),
   observacoes: z.string().optional(),
   camisetas: z.array(camisetaInputSchema).default([]),

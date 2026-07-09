@@ -3,13 +3,20 @@ import {
   integer,
   pgEnum,
   pgTable,
+  real,
   text,
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
 
 export const userRoleEnum = pgEnum("user_role", ["ADMIN", "USUARIO"]);
-export const pagamentoEnum = pgEnum("pagamento_tipo", ["NAO", "CASH", "VENMO", "DOACAO"]);
+export const pagamentoEnum = pgEnum("pagamento_tipo", [
+  "NAO",
+  "CASH",
+  "VENMO",
+  "DOACAO",
+  "FREE",
+]);
 export const tamanhoCamisetaEnum = pgEnum("tamanho_camiseta", [
   "TODDLER",
   "XS",
@@ -52,6 +59,7 @@ export const participantes = pgTable("participantes", {
   nome: text("nome").notNull(),
   telefone: text("telefone").notNull(),
   pagamentoInscricao: pagamentoEnum("pagamento_inscricao").notNull(),
+  valorInscricao: real("valor_inscricao"),
   ehServidor: boolean("eh_servidor").notNull().default(false),
   observacoes: text("observacoes"),
   checkin: boolean("checkin").notNull().default(false),
@@ -76,6 +84,7 @@ export const camisetas = pgTable("camisetas", {
   tamanho: tamanhoCamisetaEnum("tamanho").notNull(),
   idadeToddler: integer("idade_toddler"),
   pagamento: pagamentoEnum("pagamento").notNull(),
+  valorPago: real("valor_pago"),
 });
 
 export const criancas = pgTable("criancas", {
@@ -85,4 +94,6 @@ export const criancas = pgTable("criancas", {
     .references(() => participantes.id, { onDelete: "cascade" }),
   nome: text("nome").notNull(),
   idade: integer("idade").notNull(),
+  pagamento: pagamentoEnum("pagamento").notNull().default("NAO"),
+  valorPago: real("valor_pago"),
 });

@@ -1,6 +1,7 @@
 import { InMemoryEventoRepository } from "@/lib/repositories/in-memory/evento";
 import { InMemoryParticipanteRepository } from "@/lib/repositories/in-memory/participante";
 import type { IRelatorioRepository } from "@/lib/repositories/interfaces";
+import { calcularResumoFinanceiro } from "@/lib/financeiro";
 import type { RelatorioEvento } from "@/lib/types";
 import { TAMANHO_CAMISETA_LABELS } from "@/lib/types";
 
@@ -23,15 +24,18 @@ export class InMemoryRelatorioRepository implements IRelatorioRepository {
     let cashInscricao = 0;
     let venmoInscricao = 0;
     let naoPagosInscricao = 0;
-    let doacaoInscricao = 0;
+    let freeInscricao = 0;
+    let camisetasPagas = 0;
+    let camisetasNaoPagas = 0;
+    let camisetasFree = 0;
 
     for (const p of participantes) {
       if (p.ehServidor) totalServidores++;
       if (p.checkin) totalPresentes++;
       if (p.pagamentoInscricao === "NAO") {
         naoPagosInscricao++;
-      } else if (p.pagamentoInscricao === "DOACAO") {
-        doacaoInscricao++;
+      } else if (p.pagamentoInscricao === "FREE") {
+        freeInscricao++;
       } else if (p.pagamentoInscricao === "CASH") {
         cashInscricao++;
       } else if (p.pagamentoInscricao === "VENMO") {
@@ -40,6 +44,15 @@ export class InMemoryRelatorioRepository implements IRelatorioRepository {
       totalCriancas += p.criancas.length;
 
       for (const c of p.camisetas) {
+        const qty = c.quantidade;
+        if (c.pagamento === "NAO") {
+          camisetasNaoPagas += qty;
+        } else if (c.pagamento === "FREE") {
+          camisetasFree += qty;
+        } else if (c.pagamento === "CASH" || c.pagamento === "VENMO") {
+          camisetasPagas += qty;
+        }
+
         const tamanhoLabel =
           c.tamanho === "TODDLER" && c.idadeToddler
             ? `Toddler (${c.idadeToddler})`
@@ -58,6 +71,8 @@ export class InMemoryRelatorioRepository implements IRelatorioRepository {
       }
     }
 
+    const financeiro = calcularResumoFinanceiro(participantes);
+
     return {
       eventoId,
       totalParticipantes: participantes.length,
@@ -69,7 +84,11 @@ export class InMemoryRelatorioRepository implements IRelatorioRepository {
       cashInscricao,
       venmoInscricao,
       naoPagosInscricao,
-      doacaoInscricao,
+      freeInscricao,
+      ...financeiro,
+      camisetasPagas,
+      camisetasNaoPagas,
+      camisetasFree,
       camisetasPorTamanho,
       listaCamisetas,
     };

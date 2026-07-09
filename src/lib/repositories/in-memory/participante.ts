@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { isSearchActive, matchesParticipanteSearch } from "@/lib/search";
+import { normalizePagamentoTipo, normalizeValorPago } from "@/lib/pagamento";
 import { getStore } from "@/lib/db/in-memory-store";
 import type { Camiseta, Crianca, Participante, ParticipanteCompleto } from "@/lib/types";
 import type { ParticipanteInput } from "@/lib/validations/schemas";
@@ -39,6 +40,7 @@ function syncCamisetas(participanteId: string, camisetas: ParticipanteInput["cam
       tamanho: c.tamanho,
       idadeToddler: c.idadeToddler,
       pagamento: c.pagamento,
+      valorPago: normalizeValorPago(c.pagamento, c.valorPago),
     };
     store.camisetas.set(camiseta.id, camiseta);
   }
@@ -57,6 +59,8 @@ function syncCriancas(participanteId: string, criancas: ParticipanteInput["crian
       participanteId,
       nome: c.nome,
       idade: c.idade,
+      pagamento: c.pagamento,
+      valorPago: normalizeValorPago(c.pagamento, c.valorPago),
     };
     store.criancas.set(crianca.id, crianca);
   }
@@ -108,6 +112,7 @@ export class InMemoryParticipanteRepository implements IParticipanteRepository {
       nome: data.nome,
       telefone: data.telefone,
       pagamentoInscricao: data.pagamentoInscricao,
+      valorInscricao: normalizeValorPago(data.pagamentoInscricao, data.valorInscricao),
       ehServidor: data.ehServidor,
       observacoes: data.observacoes,
       checkin: false,
@@ -132,6 +137,7 @@ export class InMemoryParticipanteRepository implements IParticipanteRepository {
       nome: data.nome,
       telefone: data.telefone,
       pagamentoInscricao: data.pagamentoInscricao,
+      valorInscricao: normalizeValorPago(data.pagamentoInscricao, data.valorInscricao),
       ehServidor: data.ehServidor,
       observacoes: data.observacoes,
       atualizadoEm: new Date().toISOString(),

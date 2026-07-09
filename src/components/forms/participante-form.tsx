@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { CollapsibleSection } from "@/components/ui/collapsible";
+import { PagamentoSelectValor } from "@/components/forms/pagamento-select-valor";
 import {
   CamisetaSizePicker,
   camisetasToPickerValue,
@@ -18,30 +19,22 @@ import {
   type CamisetaFormItem,
   type CamisetasPickerValue,
 } from "@/components/forms/camiseta-size-picker";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  PAGAMENTO_INSCRICAO_LABELS,
-  type ParticipanteCompleto,
-  type PagamentoInscricao,
-} from "@/lib/types";
+import type { PagamentoCrianca, PagamentoInscricao, ParticipanteCompleto } from "@/lib/types";
 
 export type { CamisetaFormItem } from "@/components/forms/camiseta-size-picker";
 
 export interface CriancaFormItem {
   nome: string;
   idade: number;
+  pagamento: PagamentoCrianca;
+  valorPago?: number;
 }
 
 export interface ParticipanteFormData {
   nome: string;
   telefone: string;
   pagamentoInscricao: PagamentoInscricao;
+  valorInscricao?: number;
   ehServidor: boolean;
   observacoes: string;
   camisetas: CamisetaFormItem[];
@@ -51,6 +44,7 @@ export interface ParticipanteFormData {
 const emptyCrianca = (): CriancaFormItem => ({
   nome: "",
   idade: 0,
+  pagamento: "NAO",
 });
 
 export function participanteToFormData(p: ParticipanteCompleto): ParticipanteFormData {
@@ -58,6 +52,7 @@ export function participanteToFormData(p: ParticipanteCompleto): ParticipanteFor
     nome: p.nome,
     telefone: formatPhone(p.telefone),
     pagamentoInscricao: p.pagamentoInscricao,
+    valorInscricao: p.valorInscricao,
     ehServidor: p.ehServidor,
     observacoes: p.observacoes ?? "",
     camisetas: p.camisetas.map((c) => ({
@@ -65,10 +60,13 @@ export function participanteToFormData(p: ParticipanteCompleto): ParticipanteFor
       tamanho: c.tamanho,
       idadeToddler: c.idadeToddler,
       pagamento: c.pagamento,
+      valorPago: c.valorPago,
     })),
     criancas: p.criancas.map((c) => ({
       nome: c.nome,
       idade: c.idade,
+      pagamento: c.pagamento,
+      valorPago: c.valorPago,
     })),
   };
 }
@@ -138,24 +136,22 @@ export function ParticipanteForm({
               disabled={readOnly}
             />
           </div>
-          <div className="space-y-2">
-            <Label>Pagamento inscrição</Label>
-            <Select
-              value={form.pagamentoInscricao}
-              onValueChange={(v) => updateField("pagamentoInscricao", v as PagamentoInscricao)}
-              disabled={readOnly}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(PAGAMENTO_INSCRICAO_LABELS).map(([k, label]) => (
-                  <SelectItem key={k} value={k}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="sm:col-span-2">
+            <PagamentoSelectValor
+              pagamentoLabel="Pagamento inscrição"
+              pagamento={form.pagamentoInscricao}
+              valorPago={form.valorInscricao}
+              onPagamentoChange={(pagamento) => {
+                updateField("pagamentoInscricao", pagamento);
+                if (pagamento === "NAO" || pagamento === "FREE") {
+                  updateField("valorInscricao", undefined);
+                }
+              }}
+              onValorChange={(valor) => updateField("valorInscricao", valor)}
+              readOnly={readOnly}
+              pagamentoId="pagamento-inscricao"
+              valorId="valor-inscricao"
+            />
           </div>
           <div className="flex items-center gap-3 sm:col-span-2">
             <Switch
@@ -235,6 +231,33 @@ export function ParticipanteForm({
                     }}
                     required
                     disabled={readOnly}
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <PagamentoSelectValor
+                    pagamentoLabel="Pagamento"
+                    pagamento={crianca.pagamento}
+                    valorPago={crianca.valorPago}
+                    onPagamentoChange={(pagamento) => {
+                      const updated = [...form.criancas];
+                      updated[index] = {
+                        ...crianca,
+                        pagamento,
+                        valorPago:
+                          pagamento === "NAO" || pagamento === "FREE"
+                            ? undefined
+                            : crianca.valorPago,
+                      };
+                      updateField("criancas", updated);
+                    }}
+                    onValorChange={(valor) => {
+                      const updated = [...form.criancas];
+                      updated[index] = { ...crianca, valorPago: valor };
+                      updateField("criancas", updated);
+                    }}
+                    readOnly={readOnly}
+                    pagamentoId={`crianca-pagamento-${index}`}
+                    valorId={`crianca-valor-${index}`}
                   />
                 </div>
               </div>

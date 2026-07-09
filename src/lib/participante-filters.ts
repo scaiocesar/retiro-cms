@@ -1,11 +1,7 @@
 import type { PagamentoInscricao } from "@/lib/types";
+import { PAGAMENTO_TIPOS } from "@/lib/pagamento";
 
-const PAGAMENTO_INSCRICAO_VALUES: PagamentoInscricao[] = [
-  "NAO",
-  "CASH",
-  "VENMO",
-  "DOACAO",
-];
+const PAGAMENTO_INSCRICAO_VALUES: PagamentoInscricao[] = [...PAGAMENTO_TIPOS];
 
 export function parsePagamentoInscricaoFilter(
   value: string | null
