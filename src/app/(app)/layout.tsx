@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
 import { getAppContext } from "@/lib/app-context";
 
+export const dynamic = "force-dynamic";
+
 export default async function AppLayout({
   children,
 }: {

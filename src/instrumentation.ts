@@ -3,6 +3,10 @@ export async function register() {
     return;
   }
 
+  if (!process.env.DATABASE_URL) {
+    return;
+  }
+
   const { ensureSeed } = await import("@/lib/db/seed");
   await ensureSeed();
 }

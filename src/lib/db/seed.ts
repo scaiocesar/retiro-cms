@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import { getDb } from "@/lib/db";
+import { isBuildTime } from "@/lib/db/runtime";
 import { runMigrations } from "@/lib/db/migrate";
 import { usuarios } from "@/lib/db/schema";
 import { getUsuarioRepository } from "@/lib/repositories";
@@ -63,6 +64,9 @@ export async function seedDatabase(): Promise<void> {
 }
 
 export async function ensureSeed(): Promise<void> {
+  if (isBuildTime() || !process.env.DATABASE_URL) {
+    return;
+  }
   await runMigrations();
   await seedDatabase();
 }

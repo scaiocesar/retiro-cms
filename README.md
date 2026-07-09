@@ -66,11 +66,21 @@ Acesse [http://localhost:3000](http://localhost:3000)
 
 | Variável | Descrição |
 |----------|-----------|
-| `DATABASE_URL` | URL de conexão PostgreSQL |
+| `DATABASE_URL` | URL de conexão PostgreSQL (**obrigatória em runtime**) |
 | `SESSION_SECRET` | Chave da sessão (mín. 32 caracteres) |
 | `ADMIN_EMAIL` | Email do admin inicial |
 | `ADMIN_PASSWORD` | Senha do admin inicial |
 | `RECREATE_ADMIN_ON_START` | Se `true`, redefine a senha do admin a cada start |
+| `COOKIE_SECURE` | `true` em HTTPS (produção); `false` em HTTP local |
+
+### Deploy no Dokploy
+
+1. Crie um **PostgreSQL** no Dokploy (ou use um banco externo).
+2. Na aplicação, configure as variáveis de ambiente em **Runtime** (não só no build):
+   - `DATABASE_URL=postgres://usuario:senha@host:5432/retiro_cms`
+   - `SESSION_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `COOKIE_SECURE=true`
+3. O build **não precisa** de banco — migrations rodam quando o container sobe.
+4. A rede do app deve alcançar o host do Postgres (use o hostname interno do Dokploy, ex: nome do serviço).
 
 ### Scripts do banco
 
