@@ -1,12 +1,37 @@
 services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: retiro
+      POSTGRES_PASSWORD: retiro
+      POSTGRES_DB: retiro_cms
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U retiro -d retiro_cms"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   app:
     build: .
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+      - DATABASE_URL=postgres://retiro:retiro@db:5432/retiro_cms
       - COOKIE_SECURE=false
       - SESSION_SECRET=${SESSION_SECRET:-change-me-in-production-min-32-chars!!}
       - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@retiro.local}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - RECREATE_ADMIN_ON_START=${RECREATE_ADMIN_ON_START:-false}
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
+
+volumes:
+  pgdata:

@@ -6,7 +6,7 @@ Sistema de gerenciamento de retiro católico com cadastro de participantes, even
 
 - **Next.js 16** (App Router) — frontend e API
 - **TypeScript** + **Tailwind CSS**
-- **Banco em memória** (fase 1) — preparado para migração PostgreSQL via padrão Repository
+- **PostgreSQL** + **Drizzle ORM**
 - **Docker** — deploy em container
 
 ## Módulos
@@ -29,11 +29,21 @@ Sistema de gerenciamento de retiro católico com cadastro de participantes, even
 
 ## Desenvolvimento local
 
+### 1. Subir o PostgreSQL
+
+```bash
+docker compose up db -d
+```
+
+### 2. Configurar ambiente e rodar
+
 ```bash
 cp .env.example .env.local
 npm install
 npm run dev
 ```
+
+As migrations rodam automaticamente na inicialização do servidor.
 
 Acesse [http://localhost:3000](http://localhost:3000)
 
@@ -43,7 +53,7 @@ Acesse [http://localhost:3000](http://localhost:3000)
 - Email: `admin@retiro.local`
 - Senha: `admin123`
 
-## Docker
+## Docker (app + banco)
 
 ```bash
 cp .env.example .env
@@ -56,15 +66,19 @@ Acesse [http://localhost:3000](http://localhost:3000)
 
 | Variável | Descrição |
 |----------|-----------|
+| `DATABASE_URL` | URL de conexão PostgreSQL |
 | `SESSION_SECRET` | Chave da sessão (mín. 32 caracteres) |
 | `ADMIN_EMAIL` | Email do admin inicial |
 | `ADMIN_PASSWORD` | Senha do admin inicial |
+| `RECREATE_ADMIN_ON_START` | Se `true`, redefine a senha do admin a cada start |
 
-## Banco em memória
+### Scripts do banco
 
-> **Atenção:** os dados são perdidos ao reiniciar o container ou o servidor de desenvolvimento.
-
-A camada de repositório (`src/lib/repositories/`) está preparada para trocar para PostgreSQL adicionando `DATABASE_URL` e implementando `Postgres*Repository`.
+```bash
+npm run db:migrate   # aplicar migrations
+npm run db:push      # sincronizar schema (dev)
+npm run db:studio    # interface visual Drizzle
+```
 
 ## Estrutura
 
@@ -74,14 +88,9 @@ src/
 ├── components/    # UI e formulários
 └── lib/
     ├── auth/      # Sessão iron-session
-    ├── db/        # Store em memória + seed
+    ├── db/        # Schema, migrations e seed
     ├── repositories/
     ├── services/
     └── types/
+drizzle/migrations # SQL migrations
 ```
-
-## Próximos passos (fase 2)
-
-- PostgreSQL com Drizzle ORM
-- Persistência de dados entre reinícios
-- Check-in no dia do evento

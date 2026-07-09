@@ -1,7 +1,7 @@
-import { InMemoryEventoRepository } from "@/lib/repositories/in-memory/evento";
-import { InMemoryParticipanteRepository } from "@/lib/repositories/in-memory/participante";
-import { InMemoryRelatorioRepository } from "@/lib/repositories/in-memory/relatorio";
-import { InMemoryUsuarioRepository } from "@/lib/repositories/in-memory/usuario";
+import { PostgresEventoRepository } from "@/lib/repositories/postgres/evento";
+import { PostgresParticipanteRepository } from "@/lib/repositories/postgres/participante";
+import { PostgresRelatorioRepository } from "@/lib/repositories/postgres/relatorio";
+import { PostgresUsuarioRepository } from "@/lib/repositories/postgres/usuario";
 import type {
   IEventoRepository,
   IParticipanteRepository,
@@ -10,17 +10,17 @@ import type {
 } from "@/lib/repositories/interfaces";
 
 export function getUsuarioRepository(): IUsuarioRepository {
-  return new InMemoryUsuarioRepository();
+  return new PostgresUsuarioRepository();
 }
 
 export function getEventoRepository(): IEventoRepository {
-  return new InMemoryEventoRepository();
+  return new PostgresEventoRepository();
 }
 
 export function getParticipanteRepository(): IParticipanteRepository {
-  return new InMemoryParticipanteRepository();
+  return new PostgresParticipanteRepository();
 }
 
 export function getRelatorioRepository(): IRelatorioRepository {
-  return new InMemoryRelatorioRepository();
+  return new PostgresRelatorioRepository();
 }

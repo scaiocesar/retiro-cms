@@ -3,15 +3,6 @@ export async function register() {
     return;
   }
 
-  const { recreateAdminUser } = await import("@/lib/db/seed");
-  const { getStore } = await import("@/lib/db/in-memory-store");
-
-  const store = getStore();
-
-  if (process.env.RECREATE_ADMIN_ON_START === "true") {
-    store.reset();
-  }
-
-  await recreateAdminUser();
-  store.seeded = true;
+  const { ensureSeed } = await import("@/lib/db/seed");
+  await ensureSeed();
 }

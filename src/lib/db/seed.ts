@@ -1,41 +1,68 @@
 import bcrypt from "bcryptjs";
-import { v4 as uuidv4 } from "uuid";
-import { getStore } from "@/lib/db/in-memory-store";
+import { getDb } from "@/lib/db";
+import { runMigrations } from "@/lib/db/migrate";
+import { usuarios } from "@/lib/db/schema";
+import { getUsuarioRepository } from "@/lib/repositories";
 import type { UsuarioSistema } from "@/lib/types";
 
-export async function seedDatabase(): Promise<void> {
-  const store = getStore();
-  if (store.seeded) return;
-
-  await recreateAdminUser();
-  store.seeded = true;
-}
-
 export async function recreateAdminUser(): Promise<UsuarioSistema> {
-  const store = getStore();
+  const repo = getUsuarioRepository();
   const adminEmail = (process.env.ADMIN_EMAIL || "admin@retiro.local").toLowerCase();
   const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+  const senhaHash = await bcrypt.hash(adminPassword, 10);
+  const recreate = process.env.RECREATE_ADMIN_ON_START === "true";
 
-  for (const [id, user] of store.usuarios.entries()) {
-    if (user.email.toLowerCase() === adminEmail) {
-      store.usuarios.delete(id);
+  const existing = await repo.findByEmail(adminEmail);
+  if (existing) {
+    if (recreate) {
+      await repo.update(existing.id, { senhaHash });
+      return { ...existing, senhaHash };
     }
+    return existing;
   }
 
-  const senhaHash = await bcrypt.hash(adminPassword, 10);
-  const admin: UsuarioSistema = {
-    id: uuidv4(),
-    nome: "Administrador",
-    email: adminEmail,
-    senhaHash,
-    role: "ADMIN",
-    ativo: true,
-    criadoEm: new Date().toISOString(),
-  };
-  store.usuarios.set(admin.id, admin);
-  return admin;
+  const [inserted] = await getDb()
+    .insert(usuarios)
+    .values({
+      nome: "Administrador",
+      email: adminEmail,
+      senhaHash,
+      role: "ADMIN",
+      ativo: true,
+    })
+    .onConflictDoNothing({ target: usuarios.email })
+    .returning();
+
+  if (inserted) {
+    return {
+      id: inserted.id,
+      nome: inserted.nome,
+      email: inserted.email,
+      senhaHash: inserted.senhaHash,
+      role: inserted.role,
+      ativo: inserted.ativo,
+      criadoEm: inserted.criadoEm,
+    };
+  }
+
+  const created = await repo.findByEmail(adminEmail);
+  if (!created) {
+    throw new Error("Falha ao criar usuário administrador");
+  }
+
+  if (recreate) {
+    await repo.update(created.id, { senhaHash });
+    return { ...created, senhaHash };
+  }
+
+  return created;
+}
+
+export async function seedDatabase(): Promise<void> {
+  await recreateAdminUser();
 }
 
 export async function ensureSeed(): Promise<void> {
+  await runMigrations();
   await seedDatabase();
 }
