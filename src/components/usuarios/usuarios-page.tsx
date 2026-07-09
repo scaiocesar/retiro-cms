@@ -32,7 +32,7 @@ export default function UsuariosPageClient() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<UsuarioSistemaPublic | null>(null);
   const [nome, setNome] = useState("");
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [senha, setSenha] = useState("");
   const [role, setRole] = useState<UserRole>("USUARIO");
   const [ativo, setAtivo] = useState(true);
@@ -55,7 +55,7 @@ export default function UsuariosPageClient() {
   function openCreate() {
     setEditing(null);
     setNome("");
-    setEmail("");
+    setUsername("");
     setSenha("");
     setRole("USUARIO");
     setAtivo(true);
@@ -65,7 +65,7 @@ export default function UsuariosPageClient() {
   function openEdit(user: UsuarioSistemaPublic) {
     setEditing(user);
     setNome(user.nome);
-    setEmail(user.email);
+    setUsername(user.username);
     setSenha("");
     setRole(user.role);
     setAtivo(user.ativo);
@@ -80,12 +80,12 @@ export default function UsuariosPageClient() {
         ? {
             id: editing.id,
             nome,
-            email,
+            username,
             role,
             ativo,
             ...(senha ? { senha } : {}),
           }
-        : { nome, email, senha, role, ativo };
+        : { nome, username, senha, role, ativo };
 
       const res = await fetch("/api/usuarios", {
         method: editing ? method : "POST",
@@ -132,8 +132,13 @@ export default function UsuariosPageClient() {
                 <Input value={nome} onChange={(e) => setNome(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Email</Label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <Label>Usuário</Label>
+                <Input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="nome_usuario"
+                  autoComplete="off"
+                />
               </div>
               <div className="space-y-2">
                 <Label>{editing ? "Nova senha (opcional)" : "Senha"}</Label>
@@ -180,7 +185,7 @@ export default function UsuariosPageClient() {
               <CardContent className="flex items-center justify-between p-4">
                 <div>
                   <p className="font-medium">{u.nome}</p>
-                  <p className="text-sm text-muted-foreground">{u.email}</p>
+                  <p className="text-sm text-muted-foreground">@{u.username}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant={u.role === "ADMIN" ? "default" : "secondary"}>

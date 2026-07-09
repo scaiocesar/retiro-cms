@@ -25,7 +25,7 @@ export const tamanhoCamisetaEnum = pgEnum("tamanho_camiseta", [
 export const usuarios = pgTable("usuarios", {
   id: uuid("id").primaryKey().defaultRandom(),
   nome: text("nome").notNull(),
-  email: text("email").notNull().unique(),
+  username: text("username").notNull().unique(),
   senhaHash: text("senha_hash").notNull(),
   role: userRoleEnum("role").notNull(),
   ativo: boolean("ativo").notNull().default(true),

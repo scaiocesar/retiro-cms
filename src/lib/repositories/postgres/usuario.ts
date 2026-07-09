@@ -9,7 +9,7 @@ function toPublic(user: UsuarioSistema): UsuarioSistemaPublic {
   return {
     id: user.id,
     nome: user.nome,
-    email: user.email,
+    username: user.username,
     role: user.role,
     ativo: user.ativo,
     criadoEm: user.criadoEm,
@@ -20,7 +20,7 @@ function mapRow(row: typeof usuarios.$inferSelect): UsuarioSistema {
   return {
     id: row.id,
     nome: row.nome,
-    email: row.email,
+    username: row.username,
     senhaHash: row.senhaHash,
     role: row.role,
     ativo: row.ativo,
@@ -39,11 +39,11 @@ export class PostgresUsuarioRepository implements IUsuarioRepository {
     return row ? mapRow(row) : null;
   }
 
-  async findByEmail(email: string): Promise<UsuarioSistema | null> {
+  async findByUsername(username: string): Promise<UsuarioSistema | null> {
     const [row] = await getDb()
       .select()
       .from(usuarios)
-      .where(eq(usuarios.email, email.toLowerCase()))
+      .where(eq(usuarios.username, username.toLowerCase()))
       .limit(1);
     return row ? mapRow(row) : null;
   }
@@ -55,7 +55,7 @@ export class PostgresUsuarioRepository implements IUsuarioRepository {
       .insert(usuarios)
       .values({
         nome: data.nome,
-        email: data.email.toLowerCase(),
+        username: data.username,
         senhaHash: data.senhaHash,
         role: data.role,
         ativo: data.ativo ?? true,
@@ -72,7 +72,7 @@ export class PostgresUsuarioRepository implements IUsuarioRepository {
       .update(usuarios)
       .set({
         nome: data.nome,
-        email: data.email?.toLowerCase(),
+        username: data.username,
         senhaHash: data.senhaHash,
         role: data.role,
         ativo: data.ativo,

@@ -1,14 +1,21 @@
 import { z } from "zod";
 import { isValidPhone } from "@/lib/phone-mask";
 
+const usernameField = z
+  .string()
+  .min(3, "Usuário deve ter pelo menos 3 caracteres")
+  .max(32, "Usuário deve ter no máximo 32 caracteres")
+  .regex(/^[a-zA-Z0-9_]+$/, "Use apenas letras, números e underscore")
+  .transform((value) => value.toLowerCase());
+
 export const loginSchema = z.object({
-  email: z.email("Email inválido"),
+  username: usernameField,
   senha: z.string().min(1, "Senha obrigatória"),
 });
 
 export const usuarioSistemaSchema = z.object({
   nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  email: z.email("Email inválido"),
+  username: usernameField,
   senha: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").optional(),
   role: z.enum(["ADMIN", "USUARIO"]),
   ativo: z.boolean().optional(),

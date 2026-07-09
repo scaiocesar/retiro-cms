@@ -8,7 +8,7 @@ function toPublic(user: UsuarioSistema): UsuarioSistemaPublic {
   return {
     id: user.id,
     nome: user.nome,
-    email: user.email,
+    username: user.username,
     role: user.role,
     ativo: user.ativo,
     criadoEm: user.criadoEm,
@@ -26,9 +26,9 @@ export class InMemoryUsuarioRepository implements IUsuarioRepository {
     return getStore().usuarios.get(id) ?? null;
   }
 
-  async findByEmail(email: string): Promise<UsuarioSistema | null> {
+  async findByUsername(username: string): Promise<UsuarioSistema | null> {
     const users = Array.from(getStore().usuarios.values());
-    return users.find((u) => u.email.toLowerCase() === email.toLowerCase()) ?? null;
+    return users.find((u) => u.username.toLowerCase() === username.toLowerCase()) ?? null;
   }
 
   async create(
@@ -37,7 +37,7 @@ export class InMemoryUsuarioRepository implements IUsuarioRepository {
     const user: UsuarioSistema = {
       id: uuidv4(),
       nome: data.nome,
-      email: data.email.toLowerCase(),
+      username: data.username.toLowerCase(),
       senhaHash: data.senhaHash,
       role: data.role,
       ativo: data.ativo ?? true,
@@ -58,7 +58,7 @@ export class InMemoryUsuarioRepository implements IUsuarioRepository {
     const updated: UsuarioSistema = {
       ...existing,
       nome: data.nome ?? existing.nome,
-      email: data.email?.toLowerCase() ?? existing.email,
+      username: data.username?.toLowerCase() ?? existing.username,
       senhaHash: data.senhaHash ?? existing.senhaHash,
       role: data.role ?? existing.role,
       ativo: data.ativo ?? existing.ativo,

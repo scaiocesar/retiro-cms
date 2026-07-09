@@ -4,7 +4,7 @@ import type { UserRole } from "@/lib/types";
 
 export interface SessionData {
   userId: string;
-  email: string;
+  username: string;
   nome: string;
   role: UserRole;
   isLoggedIn: boolean;
@@ -12,7 +12,7 @@ export interface SessionData {
 
 export const defaultSession: SessionData = {
   userId: "",
-  email: "",
+  username: "",
   nome: "",
   role: "USUARIO",
   isLoggedIn: false,

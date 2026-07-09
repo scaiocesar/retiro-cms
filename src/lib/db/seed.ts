@@ -8,12 +8,12 @@ import type { UsuarioSistema } from "@/lib/types";
 
 export async function recreateAdminUser(): Promise<UsuarioSistema> {
   const repo = getUsuarioRepository();
-  const adminEmail = (process.env.ADMIN_EMAIL || "admin@retiro.local").toLowerCase();
+  const adminUsername = (process.env.ADMIN_USERNAME || "admin").toLowerCase();
   const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
   const senhaHash = await bcrypt.hash(adminPassword, 10);
   const recreate = process.env.RECREATE_ADMIN_ON_START === "true";
 
-  const existing = await repo.findByEmail(adminEmail);
+  const existing = await repo.findByUsername(adminUsername);
   if (existing) {
     if (recreate) {
       await repo.update(existing.id, { senhaHash });
@@ -26,19 +26,19 @@ export async function recreateAdminUser(): Promise<UsuarioSistema> {
     .insert(usuarios)
     .values({
       nome: "Administrador",
-      email: adminEmail,
+      username: adminUsername,
       senhaHash,
       role: "ADMIN",
       ativo: true,
     })
-    .onConflictDoNothing({ target: usuarios.email })
+    .onConflictDoNothing({ target: usuarios.username })
     .returning();
 
   if (inserted) {
     return {
       id: inserted.id,
       nome: inserted.nome,
-      email: inserted.email,
+      username: inserted.username,
       senhaHash: inserted.senhaHash,
       role: inserted.role,
       ativo: inserted.ativo,
@@ -46,7 +46,7 @@ export async function recreateAdminUser(): Promise<UsuarioSistema> {
     };
   }
 
-  const created = await repo.findByEmail(adminEmail);
+  const created = await repo.findByUsername(adminUsername);
   if (!created) {
     throw new Error("Falha ao criar usuário administrador");
   }

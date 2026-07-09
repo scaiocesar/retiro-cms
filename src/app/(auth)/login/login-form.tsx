@@ -26,15 +26,14 @@ export default function LoginForm() {
           <form action={formAction} className="space-y-4">
             <input type="hidden" name="from" value={from} />
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="username">Usuário</Label>
               <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="admin@retiro.local"
-                defaultValue="admin@retiro.local"
+                id="username"
+                name="username"
+                placeholder="admin"
+                defaultValue="admin"
                 required
-                autoComplete="email"
+                autoComplete="username"
               />
             </div>
             <div className="space-y-2">

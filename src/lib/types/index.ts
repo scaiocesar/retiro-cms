@@ -18,7 +18,7 @@ export type TamanhoCamiseta =
 export interface UsuarioSistema {
   id: string;
   nome: string;
-  email: string;
+  username: string;
   senhaHash: string;
   role: UserRole;
   ativo: boolean;
@@ -28,7 +28,7 @@ export interface UsuarioSistema {
 export interface UsuarioSistemaPublic {
   id: string;
   nome: string;
-  email: string;
+  username: string;
   role: UserRole;
   ativo: boolean;
   criadoEm: string;

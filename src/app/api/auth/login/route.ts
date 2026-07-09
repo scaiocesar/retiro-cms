@@ -17,15 +17,15 @@ export async function POST(request: NextRequest) {
     }
 
     const authService = new AuthService();
-    const user = await authService.login(parsed.data.email, parsed.data.senha);
+    const user = await authService.login(parsed.data.username, parsed.data.senha);
     if (!user) {
-      return apiError("Email ou senha inválidos", 401);
+      return apiError("Usuário ou senha inválidos", 401);
     }
 
     const response = NextResponse.json({
       data: {
         userId: user.userId,
-        email: user.email,
+        username: user.username,
         nome: user.nome,
         role: user.role,
       },
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       sessionOptions
     );
     session.userId = user.userId;
-    session.email = user.email;
+    session.username = user.username;
     session.nome = user.nome;
     session.role = user.role;
     session.isLoggedIn = true;

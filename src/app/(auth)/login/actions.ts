@@ -19,7 +19,7 @@ export async function loginAction(
   await ensureSeed();
 
   const parsed = loginSchema.safeParse({
-    email: formData.get("email"),
+    username: formData.get("username"),
     senha: formData.get("senha"),
   });
 
@@ -28,10 +28,10 @@ export async function loginAction(
   }
 
   const authService = new AuthService();
-  const user = await authService.login(parsed.data.email, parsed.data.senha);
+  const user = await authService.login(parsed.data.username, parsed.data.senha);
 
   if (!user) {
-    return { error: "Email ou senha inválidos" };
+    return { error: "Usuário ou senha inválidos" };
   }
 
   const session = await getIronSession<SessionData>(
@@ -39,7 +39,7 @@ export async function loginAction(
     sessionOptions
   );
   session.userId = user.userId;
-  session.email = user.email;
+  session.username = user.username;
   session.nome = user.nome;
   session.role = user.role;
   session.isLoggedIn = true;

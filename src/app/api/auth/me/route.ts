@@ -10,7 +10,7 @@ export async function GET() {
   }
   return apiSuccess({
     userId: session.userId,
-    email: session.email,
+    username: session.username,
     nome: session.nome,
     role: session.role,
   });

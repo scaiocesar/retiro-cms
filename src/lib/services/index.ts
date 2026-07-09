@@ -11,8 +11,8 @@ import type { ParticipanteInput, UsuarioSistemaInput } from "@/lib/validations/s
 export class AuthService {
   private usuarioRepo = getUsuarioRepository();
 
-  async login(email: string, senha: string) {
-    const user = await this.usuarioRepo.findByEmail(email);
+  async login(username: string, senha: string) {
+    const user = await this.usuarioRepo.findByUsername(username);
     if (!user || !user.ativo) {
       return null;
     }
@@ -20,7 +20,7 @@ export class AuthService {
     if (!valid) return null;
     return {
       userId: user.id,
-      email: user.email,
+      username: user.username,
       nome: user.nome,
       role: user.role,
     };
@@ -35,9 +35,9 @@ export class UsuarioService {
   }
 
   async create(data: UsuarioSistemaInput) {
-    const existing = await this.usuarioRepo.findByEmail(data.email);
+    const existing = await this.usuarioRepo.findByUsername(data.username);
     if (existing) {
-      throw new Error("Email já cadastrado");
+      throw new Error("Usuário já cadastrado");
     }
     if (!data.senha) {
       throw new Error("Senha obrigatória");
@@ -51,10 +51,10 @@ export class UsuarioService {
     if (!existing) {
       throw new Error("Usuário não encontrado");
     }
-    if (data.email && data.email !== existing.email) {
-      const emailTaken = await this.usuarioRepo.findByEmail(data.email);
-      if (emailTaken) {
-        throw new Error("Email já cadastrado");
+    if (data.username && data.username !== existing.username) {
+      const usernameTaken = await this.usuarioRepo.findByUsername(data.username);
+      if (usernameTaken) {
+        throw new Error("Usuário já cadastrado");
       }
     }
     let senhaHash: string | undefined;

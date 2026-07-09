@@ -14,7 +14,7 @@ import type { EventoInput, ParticipanteInput, UsuarioSistemaInput } from "@/lib/
 export interface IUsuarioRepository {
   findAll(): Promise<UsuarioSistemaPublic[]>;
   findById(id: string): Promise<UsuarioSistema | null>;
-  findByEmail(email: string): Promise<UsuarioSistema | null>;
+  findByUsername(username: string): Promise<UsuarioSistema | null>;
   create(data: UsuarioSistemaInput & { senhaHash: string }): Promise<UsuarioSistemaPublic>;
   update(id: string, data: Partial<UsuarioSistemaInput & { senhaHash?: string }>): Promise<UsuarioSistemaPublic | null>;
 }
