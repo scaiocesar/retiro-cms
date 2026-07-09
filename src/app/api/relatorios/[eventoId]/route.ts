@@ -1,0 +1,50 @@
+import { ensureSeed } from "@/lib/db/seed";
+import { apiSuccess, handleApiError } from "@/lib/api/response";
+import { requireAuth } from "@/lib/auth/helpers";
+import { RelatorioService } from "@/lib/services";
+import { PAGAMENTO_CAMISETA_LABELS } from "@/lib/types";
+
+type RouteContext = { params: Promise<{ eventoId: string }> };
+
+export async function GET(request: Request, context: RouteContext) {
+  try {
+    await ensureSeed();
+    await requireAuth();
+    const { eventoId } = await context.params;
+    const { searchParams } = new URL(request.url);
+    const format = searchParams.get("format");
+
+    const service = new RelatorioService();
+    const relatorio = await service.gerar(eventoId);
+
+    if (format === "csv") {
+      const lines = [
+        "Participante,Quantidade,Tamanho,Pagamento Camiseta",
+        ...relatorio.listaCamisetas.map(
+          (c) =>
+            `"${c.participanteNome}",${c.quantidade},"${c.tamanho}","${PAGAMENTO_CAMISETA_LABELS[c.pagamento]}"`
+        ),
+        "",
+        "Resumo",
+        `Total Participantes,${relatorio.totalParticipantes}`,
+        `Total Crianças,${relatorio.totalCriancas}`,
+        `Servidores,${relatorio.totalServidores}`,
+        `Cash Inscrição,${relatorio.cashInscricao}`,
+        `Venmo Inscrição,${relatorio.venmoInscricao}`,
+        `Não Pagos Inscrição,${relatorio.naoPagosInscricao}`,
+        `Doação (free),${relatorio.doacaoInscricao}`,
+      ];
+
+      return new Response(lines.join("\n"), {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="relatorio-${eventoId}.csv"`,
+        },
+      });
+    }
+
+    return apiSuccess(relatorio);
+  } catch (error) {
+    return handleApiError(error);
+  }
+}

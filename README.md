@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Retiro CMS
 
-## Getting Started
+Sistema de gerenciamento de retiro católico com cadastro de participantes, eventos, camisetas, crianças e relatórios.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router) — frontend e API
+- **TypeScript** + **Tailwind CSS**
+- **Banco em memória** (fase 1) — preparado para migração PostgreSQL via padrão Repository
+- **Docker** — deploy em container
+
+## Módulos
+
+- **Autenticação** — papéis Admin e Usuário
+- **Eventos** — nome, data, ativo/inativo (admin)
+- **Participantes** — inscrição, camisetas, crianças, servidor
+- **Relatórios** — métricas e exportação CSV
+- **Usuários** — gestão de acesso (admin)
+
+### Permissões
+
+| Ação | Admin | Usuário |
+|------|-------|---------|
+| Gerenciar eventos | Sim | Não |
+| Adicionar participantes | Sim | Sim |
+| Editar/excluir participantes | Sim | Não |
+| Ver relatórios | Sim | Sim |
+| Gerenciar usuários | Sim | Não |
+
+## Desenvolvimento local
 
 ```bash
+cp .env.example .env.local
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Acesse [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Na rede local (celular/outro PC):** use `http://SEU_IP:3000` (ex: `http://192.168.1.153:3000`). O servidor escuta em todas as interfaces (`0.0.0.0`).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Credenciais padrão:**
+- Email: `admin@retiro.local`
+- Senha: `admin123`
 
-## Learn More
+## Docker
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+cp .env.example .env
+docker compose up --build
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Acesse [http://localhost:3000](http://localhost:3000)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Variáveis de ambiente
 
-## Deploy on Vercel
+| Variável | Descrição |
+|----------|-----------|
+| `SESSION_SECRET` | Chave da sessão (mín. 32 caracteres) |
+| `ADMIN_EMAIL` | Email do admin inicial |
+| `ADMIN_PASSWORD` | Senha do admin inicial |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Banco em memória
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+> **Atenção:** os dados são perdidos ao reiniciar o container ou o servidor de desenvolvimento.
+
+A camada de repositório (`src/lib/repositories/`) está preparada para trocar para PostgreSQL adicionando `DATABASE_URL` e implementando `Postgres*Repository`.
+
+## Estrutura
+
+```
+src/
+├── app/           # Pages e API routes
+├── components/    # UI e formulários
+└── lib/
+    ├── auth/      # Sessão iron-session
+    ├── db/        # Store em memória + seed
+    ├── repositories/
+    ├── services/
+    └── types/
+```
+
+## Próximos passos (fase 2)
+
+- PostgreSQL com Drizzle ORM
+- Persistência de dados entre reinícios
+- Check-in no dia do evento
