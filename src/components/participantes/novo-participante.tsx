@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, List } from "lucide-react";
 import { toast } from "sonner";
 import { ParticipanteForm, type ParticipanteFormData } from "@/components/forms/participante-form";
 import { Button } from "@/components/ui/button";
@@ -49,13 +49,21 @@ export default function NovoParticipanteClient({
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/participantes" aria-label="Voltar">
-            <ArrowLeft className="h-4 w-4" />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/participantes" aria-label="Voltar">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <h1 className="text-2xl font-bold">Cadastrar participante</h1>
+        </div>
+        <Button variant="outline" asChild>
+          <Link href="/participantes/lista">
+            <List className="h-4 w-4" />
+            Ver listagem
           </Link>
         </Button>
-        <h1 className="text-2xl font-bold">Cadastrar participante</h1>
       </div>
 
       {successMessage && (

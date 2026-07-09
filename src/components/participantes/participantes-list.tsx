@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Baby, ChevronRight, MessageCircle, Plus, Search, Shirt } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,10 +17,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PagamentoBadge } from "@/components/shared/pagamento-badge";
-import { formatPhone } from "@/lib/phone-mask";
+import { formatCurrency } from "@/lib/financeiro";
+import { pagamentoExigeValor } from "@/lib/pagamento";
+import { formatPhone, whatsappUrl } from "@/lib/phone-mask";
+import {
+  saveParticipantesListState,
+  loadParticipantesListState,
+  clearParticipantesListState,
+} from "@/lib/participantes-list-state";
 import { isSearchActive, MIN_SEARCH_LENGTH } from "@/lib/search";
 import {
   PAGAMENTO_INSCRICAO_LABELS,
+  TAMANHO_CAMISETA_LABELS,
+  type Camiseta,
   type PagamentoInscricao,
   type ParticipanteCompleto,
 } from "@/lib/types";
@@ -27,11 +37,126 @@ import {
 type PagamentoFilter = "todos" | PagamentoInscricao;
 type ServidorFilter = "todos" | "servidor" | "participante";
 
+function formatValorInscricao(p: ParticipanteCompleto): string {
+  if (p.pagamentoInscricao === "FREE") return "Free";
+  if (p.pagamentoInscricao === "NAO") return "Não pago";
+  if (p.valorInscricao != null) return formatCurrency(p.valorInscricao);
+  if (pagamentoExigeValor(p.pagamentoInscricao)) return "—";
+  return "—";
+}
+
+function formatCamisetasResumo(camisetas: Camiseta[]): string {
+  if (camisetas.length === 0) return "Nenhuma";
+
+  return camisetas
+    .map((c) => {
+      const label =
+        c.tamanho === "TODDLER" && c.idadeToddler
+          ? `Toddler (${c.idadeToddler})`
+          : TAMANHO_CAMISETA_LABELS[c.tamanho];
+      return c.quantidade > 1 ? `${label} x${c.quantidade}` : label;
+    })
+    .join(", ");
+}
+
+function totalCamisetas(camisetas: Camiseta[]): number {
+  return camisetas.reduce((sum, c) => sum + c.quantidade, 0);
+}
+
+function ParticipanteCard({
+  participante: p,
+  onOpen,
+}: {
+  participante: ParticipanteCompleto;
+  onOpen: () => void;
+}) {
+  const waLink = whatsappUrl(p.telefone);
+  const qtdCamisetas = totalCamisetas(p.camisetas);
+  const camisetaValor =
+    p.camisetas.length > 0 && pagamentoExigeValor(p.camisetas[0].pagamento)
+      ? p.camisetas[0].valorPago
+      : undefined;
+
+  return (
+    <Card
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
+      className="cursor-pointer transition-colors hover:border-primary/30 hover:bg-secondary/30 active:scale-[0.99]"
+    >
+      <CardContent className="space-y-3 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="font-medium">{p.nome}</p>
+            {waLink ? (
+              <a
+                href={waLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="mt-1 flex items-center gap-1.5 text-sm text-green-600 hover:underline"
+              >
+                <MessageCircle className="h-3.5 w-3.5 shrink-0" />
+                {formatPhone(p.telefone)}
+              </a>
+            ) : (
+              <p className="mt-1 text-sm text-muted-foreground">{formatPhone(p.telefone)}</p>
+            )}
+          </div>
+          <div className="flex shrink-0 items-start gap-2">
+            <div className="flex flex-col items-end gap-1">
+              <PagamentoBadge pagamento={p.pagamentoInscricao} />
+              {p.ehServidor && <Badge variant="secondary">Servidor</Badge>}
+            </div>
+            <ChevronRight className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+          </div>
+        </div>
+
+        <div className="grid gap-2 rounded-lg border border-border/60 bg-muted/30 p-3 text-sm sm:grid-cols-3">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">Valor inscrição</p>
+            <p className="mt-0.5 font-semibold tabular-nums">{formatValorInscricao(p)}</p>
+          </div>
+          <div>
+            <p className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+              <Shirt className="h-3 w-3" />
+              Camisetas
+              {qtdCamisetas > 0 && (
+                <span className="font-normal">({qtdCamisetas})</span>
+              )}
+            </p>
+            <p className="mt-0.5 leading-snug">{formatCamisetasResumo(p.camisetas)}</p>
+            {camisetaValor != null && (
+              <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
+                {formatCurrency(camisetaValor)}
+              </p>
+            )}
+          </div>
+          <div>
+            <p className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+              <Baby className="h-3 w-3" />
+              Crianças
+            </p>
+            <p className="mt-0.5 font-semibold tabular-nums">{p.criancas.length}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function ParticipantesList({
   eventoId,
 }: {
   eventoId: string | null;
 }) {
+  const router = useRouter();
   const [participantes, setParticipantes] = useState<ParticipanteCompleto[]>([]);
   const [search, setSearch] = useState("");
   const [pagamentoFilter, setPagamentoFilter] = useState<PagamentoFilter>("todos");
@@ -40,6 +165,33 @@ export default function ParticipantesList({
   const [hasSearched, setHasSearched] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const restoredRef = useRef(false);
+
+  useEffect(() => {
+    if (restoredRef.current || !eventoId) return;
+    restoredRef.current = true;
+
+    const saved = loadParticipantesListState();
+    if (!saved) return;
+
+    clearParticipantesListState();
+    setSearch(saved.search);
+    setPagamentoFilter(saved.pagamentoFilter as PagamentoFilter);
+    setServidorFilter(saved.servidorFilter as ServidorFilter);
+    setParticipantes(saved.participantes);
+    setHasSearched(saved.hasSearched);
+  }, [eventoId]);
+
+  function openParticipante(p: ParticipanteCompleto) {
+    saveParticipantesListState({
+      search,
+      pagamentoFilter,
+      servidorFilter,
+      participantes,
+      hasSearched,
+    });
+    router.push(`/participantes/${p.id}`);
+  }
 
   const searchTooShort = search.trim().length > 0 && !isSearchActive(search);
 
@@ -108,13 +260,22 @@ export default function ParticipantesList({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/participantes" aria-label="Voltar">
-            <ArrowLeft className="h-4 w-4" />
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/participantes" aria-label="Voltar">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <h1 className="text-2xl font-bold">Lista de participantes</h1>
+        </div>
+        <Button asChild className="shrink-0">
+          <Link href="/participantes/novo">
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Novo participante</span>
+            <span className="sm:hidden">Novo</span>
           </Link>
         </Button>
-        <h1 className="text-2xl font-bold">Lista de participantes</h1>
       </div>
 
       <div className="space-y-3">
@@ -215,61 +376,15 @@ export default function ParticipantesList({
       ) : participantes.length === 0 ? (
         <p className="text-center text-muted-foreground py-8">Nenhum participante encontrado</p>
       ) : (
-        <>
-          <div className="space-y-3 md:hidden">
-            {participantes.map((p) => (
-              <Link key={p.id} href={`/participantes/${p.id}`}>
-                <Card className="transition-colors hover:bg-secondary/30">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="font-medium">{p.nome}</p>
-                        <p className="text-sm text-muted-foreground">{formatPhone(p.telefone)}</p>
-                      </div>
-                      <div className="flex flex-col items-end gap-1">
-                        <PagamentoBadge pagamento={p.pagamentoInscricao} />
-                        {p.ehServidor && <Badge variant="secondary">Servidor</Badge>}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-
-          <div className="hidden md:block overflow-x-auto rounded-xl border border-border">
-            <table className="w-full text-sm">
-              <thead className="bg-secondary/50">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium">Nome</th>
-                  <th className="px-4 py-3 text-left font-medium">Telefone</th>
-                  <th className="px-4 py-3 text-left font-medium">Pagamento</th>
-                  <th className="px-4 py-3 text-left font-medium">Servidor</th>
-                  <th className="px-4 py-3 text-left font-medium">Camisetas</th>
-                  <th className="px-4 py-3 text-left font-medium">Crianças</th>
-                </tr>
-              </thead>
-              <tbody>
-                {participantes.map((p) => (
-                  <tr key={p.id} className="border-t border-border hover:bg-secondary/20">
-                    <td className="px-4 py-3">
-                      <Link href={`/participantes/${p.id}`} className="font-medium text-primary hover:underline">
-                        {p.nome}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">{formatPhone(p.telefone)}</td>
-                    <td className="px-4 py-3">
-                      <PagamentoBadge pagamento={p.pagamentoInscricao} />
-                    </td>
-                    <td className="px-4 py-3">{p.ehServidor ? "Sim" : "Não"}</td>
-                    <td className="px-4 py-3">{p.camisetas.length}</td>
-                    <td className="px-4 py-3">{p.criancas.length}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {participantes.map((p) => (
+            <ParticipanteCard
+              key={p.id}
+              participante={p}
+              onOpen={() => openParticipante(p)}
+            />
+          ))}
+        </div>
       )}
     </div>
   );

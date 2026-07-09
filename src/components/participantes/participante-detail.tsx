@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { ArrowLeft, List, Trash2 } from "lucide-react";
 import {
   ParticipanteForm,
   participanteToFormData,
@@ -72,7 +73,7 @@ export default function ParticipanteDetailClient({
         return;
       }
       toast.success("Participante excluído");
-      router.push("/participantes");
+      router.push("/participantes/lista");
       router.refresh();
     } catch {
       toast.error("Erro de conexão");
@@ -87,21 +88,36 @@ export default function ParticipanteDetailClient({
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">
-          {isAdmin ? "Editar participante" : "Detalhes do participante"}
-        </h1>
-        {isAdmin && (
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleDelete}
-            disabled={deleting}
-          >
-            <Trash2 className="h-4 w-4" />
-            Excluir
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/participantes/lista" aria-label="Voltar">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
           </Button>
-        )}
+          <h1 className="text-2xl font-bold">
+            {isAdmin ? "Editar participante" : "Detalhes do participante"}
+          </h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/participantes/lista">
+              <List className="h-4 w-4" />
+              Voltar para listagem
+            </Link>
+          </Button>
+          {isAdmin && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              <Trash2 className="h-4 w-4" />
+              Excluir
+            </Button>
+          )}
+        </div>
       </div>
       <ParticipanteForm
         initialData={participanteToFormData(participante)}
