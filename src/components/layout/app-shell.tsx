@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   Home,
   LogOut,
+  Shirt,
   Users,
   UserCog,
 } from "lucide-react";
@@ -27,6 +28,7 @@ const navItems = [
   { href: "/", label: "Início", icon: Home },
   { href: "/participantes", label: "Participantes", icon: Users },
   { href: "/checkin", label: "Check-in", icon: ClipboardCheck },
+  { href: "/retirada", label: "Retirada", icon: Shirt },
 ];
 
 const adminNavItems = [

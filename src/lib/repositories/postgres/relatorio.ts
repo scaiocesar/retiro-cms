@@ -28,6 +28,8 @@ export class PostgresRelatorioRepository implements IRelatorioRepository {
     let camisetasPagas = 0;
     let camisetasNaoPagas = 0;
     let camisetasFree = 0;
+    let camisetasRetiradas = 0;
+    let camisetasPendentes = 0;
 
     for (const p of participantes) {
       if (p.ehServidor) totalServidores++;
@@ -53,6 +55,12 @@ export class PostgresRelatorioRepository implements IRelatorioRepository {
           camisetasPagas += qty;
         }
 
+        if (c.retirada) {
+          camisetasRetiradas += qty;
+        } else {
+          camisetasPendentes += qty;
+        }
+
         const tamanhoLabel =
           c.tamanho === "TODDLER" && c.idadeToddler
             ? `Toddler (${c.idadeToddler})`
@@ -76,6 +84,7 @@ export class PostgresRelatorioRepository implements IRelatorioRepository {
     return {
       eventoId,
       totalParticipantes: participantes.length,
+      totalPessoas: participantes.length + totalCriancas,
       totalParticipantesNaoServidores: participantes.length - totalServidores,
       totalCriancas,
       totalServidores,
@@ -89,6 +98,8 @@ export class PostgresRelatorioRepository implements IRelatorioRepository {
       camisetasPagas,
       camisetasNaoPagas,
       camisetasFree,
+      camisetasRetiradas,
+      camisetasPendentes,
       camisetasPorTamanho,
       listaCamisetas,
     };

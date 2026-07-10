@@ -26,6 +26,8 @@
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",
     "iron-session": "^8.0.4",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "lucide-react": "^1.23.0",
     "next": "16.2.10",
     "postgres": "^3.4.9",

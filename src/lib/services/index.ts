@@ -129,6 +129,12 @@ export class ParticipanteService {
     if (!updated) throw new Error("Participante não encontrado");
     return updated;
   }
+
+  async setCamisetaRetirada(camisetaId: string, retirada: boolean) {
+    const updated = await this.participanteRepo.setCamisetaRetirada(camisetaId, retirada);
+    if (!updated) throw new Error("Camiseta não encontrada");
+    return updated;
+  }
 }
 
 export class RelatorioService {

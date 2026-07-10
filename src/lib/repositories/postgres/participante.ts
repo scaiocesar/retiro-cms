@@ -43,7 +43,13 @@ function mapCamiseta(row: typeof camisetas.$inferSelect): Camiseta {
     idadeToddler: row.idadeToddler ?? undefined,
     pagamento: normalizePagamentoTipo(row.pagamento),
     valorPago: row.valorPago ?? undefined,
+    retirada: row.retirada,
+    retiradaEm: row.retiradaEm ?? undefined,
   };
+}
+
+function camisetaRetiradaKey(tamanho: string, idadeToddler?: number | null) {
+  return `${tamanho}|${idadeToddler ?? ""}`;
 }
 
 function mapCrianca(row: typeof criancas.$inferSelect): Crianca {
@@ -111,19 +117,40 @@ async function syncCamisetas(
   items: ParticipanteInput["camisetas"]
 ) {
   const db = getDb();
+  const existing = await db
+    .select()
+    .from(camisetas)
+    .where(eq(camisetas.participanteId, participanteId));
+
+  const retiradaByKey = new Map<
+    string,
+    { retirada: boolean; retiradaEm: string | null }
+  >();
+  for (const row of existing) {
+    retiradaByKey.set(camisetaRetiradaKey(row.tamanho, row.idadeToddler), {
+      retirada: row.retirada,
+      retiradaEm: row.retiradaEm,
+    });
+  }
+
   await db.delete(camisetas).where(eq(camisetas.participanteId, participanteId));
 
   if (items.length === 0) return;
 
   await db.insert(camisetas).values(
-    items.map((item) => ({
-      participanteId,
-      quantidade: item.quantidade,
-      tamanho: item.tamanho,
-      idadeToddler: item.idadeToddler,
-      pagamento: item.pagamento,
-      valorPago: normalizeValorPago(item.pagamento, item.valorPago),
-    }))
+    items.map((item) => {
+      const prev = retiradaByKey.get(camisetaRetiradaKey(item.tamanho, item.idadeToddler));
+      return {
+        participanteId,
+        quantidade: item.quantidade,
+        tamanho: item.tamanho,
+        idadeToddler: item.idadeToddler,
+        pagamento: item.pagamento,
+        valorPago: normalizeValorPago(item.pagamento, item.valorPago),
+        retirada: prev?.retirada ?? false,
+        retiradaEm: prev?.retiradaEm ?? null,
+      };
+    })
   );
 }
 
@@ -261,5 +288,23 @@ export class PostgresParticipanteRepository implements IParticipanteRepository {
 
     if (!row) return null;
     return this.findById(id);
+  }
+
+  async setCamisetaRetirada(
+    camisetaId: string,
+    retirada: boolean
+  ): Promise<ParticipanteCompleto | null> {
+    const now = new Date().toISOString();
+    const [row] = await getDb()
+      .update(camisetas)
+      .set({
+        retirada,
+        retiradaEm: retirada ? now : null,
+      })
+      .where(eq(camisetas.id, camisetaId))
+      .returning();
+
+    if (!row) return null;
+    return this.findById(row.participanteId);
   }
 }

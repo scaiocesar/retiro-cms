@@ -2,6 +2,10 @@ import type { PagamentoTipo } from "@/lib/pagamento";
 import type { ParticipanteCompleto } from "@/lib/types";
 
 export interface ResumoFinanceiro {
+  valorDinheiroInscricao: number;
+  valorVenmoInscricao: number;
+  valorDinheiroCamiseta: number;
+  valorVenmoCamiseta: number;
   totalValorInscricao: number;
   totalValorCamiseta: number;
   totalDinheiro: number;
@@ -19,36 +23,43 @@ function valorPorMetodo(pagamento: PagamentoTipo, valor?: number) {
 export function calcularResumoFinanceiro(
   participantes: ParticipanteCompleto[]
 ): ResumoFinanceiro {
-  let totalValorInscricao = 0;
-  let totalValorCamiseta = 0;
-  let totalDinheiro = 0;
-  let totalVenmo = 0;
+  let valorDinheiroInscricao = 0;
+  let valorVenmoInscricao = 0;
+  let valorDinheiroCamiseta = 0;
+  let valorVenmoCamiseta = 0;
 
   for (const p of participantes) {
     const valorInscricao = p.valorInscricao ?? 0;
-    totalValorInscricao += valorInscricao;
     const inscricao = valorPorMetodo(p.pagamentoInscricao, valorInscricao);
-    totalDinheiro += inscricao.cash;
-    totalVenmo += inscricao.venmo;
+    valorDinheiroInscricao += inscricao.cash;
+    valorVenmoInscricao += inscricao.venmo;
 
     if (p.camisetas.length > 0) {
       const camiseta = p.camisetas[0];
       const valorCamiseta = camiseta.valorPago ?? 0;
-      totalValorCamiseta += valorCamiseta;
       const camisetaPay = valorPorMetodo(camiseta.pagamento, valorCamiseta);
-      totalDinheiro += camisetaPay.cash;
-      totalVenmo += camisetaPay.venmo;
+      valorDinheiroCamiseta += camisetaPay.cash;
+      valorVenmoCamiseta += camisetaPay.venmo;
     }
 
     for (const crianca of p.criancas) {
       const valorCrianca = crianca.valorPago ?? 0;
       const criancaPay = valorPorMetodo(crianca.pagamento, valorCrianca);
-      totalDinheiro += criancaPay.cash;
-      totalVenmo += criancaPay.venmo;
+      valorDinheiroInscricao += criancaPay.cash;
+      valorVenmoInscricao += criancaPay.venmo;
     }
   }
 
+  const totalValorInscricao = valorDinheiroInscricao + valorVenmoInscricao;
+  const totalValorCamiseta = valorDinheiroCamiseta + valorVenmoCamiseta;
+  const totalDinheiro = valorDinheiroInscricao + valorDinheiroCamiseta;
+  const totalVenmo = valorVenmoInscricao + valorVenmoCamiseta;
+
   return {
+    valorDinheiroInscricao,
+    valorVenmoInscricao,
+    valorDinheiroCamiseta,
+    valorVenmoCamiseta,
     totalValorInscricao,
     totalValorCamiseta,
     totalDinheiro,

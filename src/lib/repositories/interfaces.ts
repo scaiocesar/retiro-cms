@@ -43,6 +43,10 @@ export interface IParticipanteRepository {
   update(id: string, data: ParticipanteInput): Promise<ParticipanteCompleto | null>;
   delete(id: string): Promise<boolean>;
   setCheckin(id: string, checkin: boolean): Promise<ParticipanteCompleto | null>;
+  setCamisetaRetirada(
+    camisetaId: string,
+    retirada: boolean
+  ): Promise<ParticipanteCompleto | null>;
 }
 
 export interface IRelatorioRepository {

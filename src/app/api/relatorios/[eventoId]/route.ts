@@ -27,6 +27,7 @@ export async function GET(request: Request, context: RouteContext) {
         "",
         "Resumo",
         `Total Participantes,${relatorio.totalParticipantes}`,
+        `Total Pessoas,${relatorio.totalPessoas}`,
         `Total Crianças,${relatorio.totalCriancas}`,
         `Servidores,${relatorio.totalServidores}`,
         `Cash Inscrição,${relatorio.cashInscricao}`,
@@ -35,8 +36,12 @@ export async function GET(request: Request, context: RouteContext) {
         `Free Inscrição,${relatorio.freeInscricao}`,
         "",
         "Financeiro",
-        `Total Valor Inscrição,${relatorio.totalValorInscricao.toFixed(2)}`,
-        `Total Valor Camiseta,${relatorio.totalValorCamiseta.toFixed(2)}`,
+        `Inscrição Dinheiro,${relatorio.valorDinheiroInscricao.toFixed(2)}`,
+        `Inscrição Venmo,${relatorio.valorVenmoInscricao.toFixed(2)}`,
+        `Total Inscrição,${relatorio.totalValorInscricao.toFixed(2)}`,
+        `Camiseta Dinheiro,${relatorio.valorDinheiroCamiseta.toFixed(2)}`,
+        `Camiseta Venmo,${relatorio.valorVenmoCamiseta.toFixed(2)}`,
+        `Total Camiseta,${relatorio.totalValorCamiseta.toFixed(2)}`,
         `Total Dinheiro,${relatorio.totalDinheiro.toFixed(2)}`,
         `Total Venmo,${relatorio.totalVenmo.toFixed(2)}`,
         `Total Geral,${relatorio.totalGeral.toFixed(2)}`,
@@ -45,6 +50,10 @@ export async function GET(request: Request, context: RouteContext) {
         `Pagas,${relatorio.camisetasPagas}`,
         `Não pagas,${relatorio.camisetasNaoPagas}`,
         `Free,${relatorio.camisetasFree}`,
+        "",
+        "Camisetas retirada",
+        `Retiradas,${relatorio.camisetasRetiradas}`,
+        `Pendentes,${relatorio.camisetasPendentes}`,
       ];
 
       return new Response(lines.join("\n"), {

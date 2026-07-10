@@ -85,6 +85,8 @@ export const camisetas = pgTable("camisetas", {
   idadeToddler: integer("idade_toddler"),
   pagamento: pagamentoEnum("pagamento").notNull(),
   valorPago: real("valor_pago"),
+  retirada: boolean("retirada").notNull().default(false),
+  retiradaEm: timestamp("retirada_em", { withTimezone: true, mode: "string" }),
 });
 
 export const criancas = pgTable("criancas", {

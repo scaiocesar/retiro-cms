@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckinChart } from "@/components/relatorios/checkin-chart";
 import { PagamentoChart } from "@/components/relatorios/pagamento-chart";
+import { RetiradaChart } from "@/components/relatorios/retirada-chart";
 import { formatCurrency } from "@/lib/financeiro";
 import type { RelatorioEvento } from "@/lib/types";
 
@@ -42,6 +43,56 @@ function BreakdownRow({ label, value }: { label: string; value: number }) {
     <div className="flex items-center justify-between gap-4 text-sm">
       <span className="text-muted-foreground">{label}</span>
       <span className="font-semibold tabular-nums">{value}</span>
+    </div>
+  );
+}
+
+function FinanceRow({
+  label,
+  value,
+  valueClassName,
+  bold,
+}: {
+  label: string;
+  value: number;
+  valueClassName?: string;
+  bold?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 text-sm">
+      <span className={bold ? "font-medium" : "text-muted-foreground"}>{label}</span>
+      <span
+        className={`tabular-nums ${bold ? "text-base font-bold" : "font-semibold"} ${valueClassName ?? ""}`}
+      >
+        {formatCurrency(value)}
+      </span>
+    </div>
+  );
+}
+
+function FinanceCategory({
+  title,
+  dinheiro,
+  venmo,
+  total,
+  totalLabel,
+}: {
+  title: string;
+  dinheiro: number;
+  venmo: number;
+  total: number;
+  totalLabel: string;
+}) {
+  return (
+    <div className="rounded-lg border bg-muted/30 p-4">
+      <h3 className="mb-3 text-sm font-semibold">{title}</h3>
+      <div className="space-y-2">
+        <FinanceRow label="Dinheiro" value={dinheiro} valueClassName="text-success" />
+        <FinanceRow label="Venmo" value={venmo} valueClassName="text-blue-600" />
+        <div className="border-t pt-2">
+          <FinanceRow label={totalLabel} value={total} bold />
+        </div>
+      </div>
     </div>
   );
 }
@@ -91,7 +142,7 @@ export function RelatorioResumo({
                 <div className="flex flex-col items-center justify-center rounded-xl border-2 border-primary/20 bg-primary/5 px-6 py-5 sm:min-w-[148px] sm:px-8">
                   <UsersRound className="mb-2 h-5 w-5 text-primary" />
                   <p className="text-5xl font-bold leading-none tabular-nums sm:text-6xl">
-                    {relatorio.totalParticipantes}
+                    {relatorio.totalPessoas}
                   </p>
                   <p className="mt-2 text-sm font-medium text-muted-foreground">
                     Total de pessoas
@@ -167,38 +218,48 @@ export function RelatorioResumo({
         <SectionTitle>Financeiro</SectionTitle>
         <Card>
           <CardContent className="space-y-6 pt-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
-              <div className="flex flex-col items-center justify-center rounded-xl border-2 border-primary/20 bg-primary/5 px-6 py-5 sm:min-w-[148px] sm:px-8">
-                <DollarSign className="mb-2 h-5 w-5 text-primary" />
-                <p className="text-3xl font-bold leading-none tabular-nums sm:text-4xl">
-                  {formatCurrency(relatorio.totalGeral)}
-                </p>
-                <p className="mt-2 text-sm font-medium text-muted-foreground">Total geral</p>
-              </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FinanceCategory
+                title="Inscrição"
+                dinheiro={relatorio.valorDinheiroInscricao}
+                venmo={relatorio.valorVenmoInscricao}
+                total={relatorio.totalValorInscricao}
+                totalLabel="Total inscrição"
+              />
+              <FinanceCategory
+                title="Camiseta"
+                dinheiro={relatorio.valorDinheiroCamiseta}
+                venmo={relatorio.valorVenmoCamiseta}
+                total={relatorio.totalValorCamiseta}
+                totalLabel="Total camiseta"
+              />
+            </div>
 
-              <div className="grid flex-1 grid-cols-2 gap-3 sm:grid-cols-2">
-                <MiniStat
-                  label="Valor inscrição"
-                  value={relatorio.totalValorInscricao}
-                  format="currency"
-                />
-                <MiniStat
-                  label="Valor camiseta"
-                  value={relatorio.totalValorCamiseta}
-                  format="currency"
-                />
-                <MiniStat
+            <div className="rounded-lg border-2 border-primary/20 bg-primary/5 p-4">
+              <div className="space-y-2">
+                <FinanceRow
                   label="Total dinheiro"
                   value={relatorio.totalDinheiro}
-                  format="currency"
                   valueClassName="text-success"
+                  bold
                 />
-                <MiniStat
+                <FinanceRow
                   label="Total Venmo"
                   value={relatorio.totalVenmo}
-                  format="currency"
                   valueClassName="text-blue-600"
+                  bold
                 />
+                <div className="border-t border-primary/20 pt-2">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="flex items-center gap-2 text-sm font-semibold">
+                      <DollarSign className="h-4 w-4 text-primary" />
+                      Total geral
+                    </span>
+                    <span className="text-xl font-bold tabular-nums">
+                      {formatCurrency(relatorio.totalGeral)}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -235,6 +296,14 @@ export function RelatorioResumo({
                   )}
                 </CardContent>
               </div>
+            </div>
+
+            <div className="border-t pt-6">
+              <p className="mb-4 text-sm font-medium text-muted-foreground">Retirada</p>
+              <RetiradaChart
+                retiradas={relatorio.camisetasRetiradas}
+                pendentes={relatorio.camisetasPendentes}
+              />
             </div>
 
             <div className="border-t pt-6">

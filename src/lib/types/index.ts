@@ -52,6 +52,8 @@ export interface Camiseta {
   idadeToddler?: number;
   pagamento: PagamentoCamiseta;
   valorPago?: number;
+  retirada: boolean;
+  retiradaEm?: string;
 }
 
 export interface Crianca {
@@ -87,6 +89,7 @@ export interface ParticipanteCompleto extends Participante {
 export interface RelatorioEvento {
   eventoId: string;
   totalParticipantes: number;
+  totalPessoas: number;
   totalParticipantesNaoServidores: number;
   totalCriancas: number;
   totalServidores: number;
@@ -96,6 +99,10 @@ export interface RelatorioEvento {
   venmoInscricao: number;
   naoPagosInscricao: number;
   freeInscricao: number;
+  valorDinheiroInscricao: number;
+  valorVenmoInscricao: number;
+  valorDinheiroCamiseta: number;
+  valorVenmoCamiseta: number;
   totalValorInscricao: number;
   totalValorCamiseta: number;
   totalDinheiro: number;
@@ -104,6 +111,8 @@ export interface RelatorioEvento {
   camisetasPagas: number;
   camisetasNaoPagas: number;
   camisetasFree: number;
+  camisetasRetiradas: number;
+  camisetasPendentes: number;
   camisetasPorTamanho: Record<string, number>;
   listaCamisetas: Array<{
     participanteNome: string;

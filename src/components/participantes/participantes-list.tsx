@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Baby, ChevronRight, MessageCircle, Plus, Search, Shirt } from "lucide-react";
+import { ArrowLeft, Baby, ChevronRight, Download, MessageCircle, Plus, Search, Shirt } from "lucide-react";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -162,6 +163,7 @@ export default function ParticipantesList({
   const [pagamentoFilter, setPagamentoFilter] = useState<PagamentoFilter>("todos");
   const [servidorFilter, setServidorFilter] = useState<ServidorFilter>("todos");
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -250,6 +252,32 @@ export default function ParticipantesList({
     }
   }
 
+  async function handleExportPdf() {
+    if (!eventoId) return;
+
+    setExporting(true);
+    try {
+      const res = await fetch(`/api/participantes/export-pdf?eventoId=${eventoId}`);
+      if (!res.ok) {
+        toast.error("Erro ao exportar PDF");
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `participantes-${eventoId}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success("PDF exportado com sucesso!");
+    } catch {
+      toast.error("Erro de conexão");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   if (!eventoId) {
     return (
       <p className="text-center text-muted-foreground py-12">
@@ -269,13 +297,24 @@ export default function ParticipantesList({
           </Button>
           <h1 className="text-2xl font-bold">Lista de participantes</h1>
         </div>
-        <Button asChild className="shrink-0">
-          <Link href="/participantes/novo">
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Novo participante</span>
-            <span className="sm:hidden">Novo</span>
-          </Link>
-        </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => void handleExportPdf()}
+            disabled={exporting}
+          >
+            <Download className="h-4 w-4" />
+            <span className="hidden sm:inline">Exportar PDF</span>
+            <span className="sm:hidden">PDF</span>
+          </Button>
+          <Button asChild>
+            <Link href="/participantes/novo">
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Novo participante</span>
+              <span className="sm:hidden">Novo</span>
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-3">

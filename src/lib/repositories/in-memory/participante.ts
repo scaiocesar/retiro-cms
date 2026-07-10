@@ -25,14 +25,31 @@ function buildCompleto(participante: Participante): ParticipanteCompleto {
   };
 }
 
+function camisetaRetiradaKey(tamanho: string, idadeToddler?: number) {
+  return `${tamanho}|${idadeToddler ?? ""}`;
+}
+
 function syncCamisetas(participanteId: string, camisetas: ParticipanteInput["camisetas"]) {
   const store = getStore();
+  const existing = Array.from(store.camisetas.values()).filter(
+    (c) => c.participanteId === participanteId
+  );
+
+  const retiradaByKey = new Map<string, { retirada: boolean; retiradaEm?: string }>();
+  for (const c of existing) {
+    retiradaByKey.set(camisetaRetiradaKey(c.tamanho, c.idadeToddler), {
+      retirada: c.retirada,
+      retiradaEm: c.retiradaEm,
+    });
+  }
+
   for (const [id, camiseta] of store.camisetas.entries()) {
     if (camiseta.participanteId === participanteId) {
       store.camisetas.delete(id);
     }
   }
   for (const c of camisetas) {
+    const prev = retiradaByKey.get(camisetaRetiradaKey(c.tamanho, c.idadeToddler));
     const camiseta: Camiseta = {
       id: uuidv4(),
       participanteId,
@@ -41,6 +58,8 @@ function syncCamisetas(participanteId: string, camisetas: ParticipanteInput["cam
       idadeToddler: c.idadeToddler,
       pagamento: c.pagamento,
       valorPago: normalizeValorPago(c.pagamento, c.valorPago),
+      retirada: prev?.retirada ?? false,
+      retiradaEm: prev?.retiradaEm,
     };
     store.camisetas.set(camiseta.id, camiseta);
   }
@@ -176,5 +195,25 @@ export class InMemoryParticipanteRepository implements IParticipanteRepository {
     };
     store.participantes.set(id, updated);
     return buildCompleto(updated);
+  }
+
+  async setCamisetaRetirada(
+    camisetaId: string,
+    retirada: boolean
+  ): Promise<ParticipanteCompleto | null> {
+    const store = getStore();
+    const camiseta = store.camisetas.get(camisetaId);
+    if (!camiseta) return null;
+
+    const now = new Date().toISOString();
+    store.camisetas.set(camisetaId, {
+      ...camiseta,
+      retirada,
+      retiradaEm: retirada ? now : undefined,
+    });
+
+    const participante = store.participantes.get(camiseta.participanteId);
+    if (!participante) return null;
+    return buildCompleto(participante);
   }
 }
