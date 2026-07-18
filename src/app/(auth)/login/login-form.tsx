@@ -30,8 +30,6 @@ export default function LoginForm() {
               <Input
                 id="username"
                 name="username"
-                placeholder="admin"
-                defaultValue="admin"
                 required
                 autoComplete="username"
               />

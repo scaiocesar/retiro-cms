@@ -29,6 +29,13 @@
       "when": 1740000004000,
       "tag": "0004_camiseta_retirada",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1740000005000,
+      "tag": "0005_planejamento",
+      "breakpoints": true
     }
   ]
 }

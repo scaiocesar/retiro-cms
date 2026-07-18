@@ -5,11 +5,21 @@ import type {
   PagamentoInscricao,
   Participante,
   ParticipanteCompleto,
+  PlanejamentoAtividade,
+  PlanejamentoDia,
   RelatorioEvento,
   UsuarioSistema,
   UsuarioSistemaPublic,
 } from "@/lib/types";
-import type { EventoInput, ParticipanteInput, UsuarioSistemaInput } from "@/lib/validations/schemas";
+import type {
+  EventoInput,
+  ParticipanteInput,
+  PlanejamentoAtividadeInput,
+  PlanejamentoAtividadeUpdateInput,
+  PlanejamentoDiaInput,
+  PlanejamentoDiaUpdateInput,
+  UsuarioSistemaInput,
+} from "@/lib/validations/schemas";
 
 export interface IUsuarioRepository {
   findAll(): Promise<UsuarioSistemaPublic[]>;
@@ -51,6 +61,24 @@ export interface IParticipanteRepository {
 
 export interface IRelatorioRepository {
   gerar(eventoId: string): Promise<RelatorioEvento | null>;
+}
+
+export interface IPlanejamentoRepository {
+  findDiasByEvento(eventoId: string): Promise<PlanejamentoDia[]>;
+  findDiaById(id: string): Promise<PlanejamentoDia | null>;
+  findAtividadesByDia(diaId: string): Promise<PlanejamentoAtividade[]>;
+  findAtividadesByDias(diaIds: string[]): Promise<PlanejamentoAtividade[]>;
+  findAtividadeById(id: string): Promise<PlanejamentoAtividade | null>;
+  createDia(data: PlanejamentoDiaInput): Promise<PlanejamentoDia>;
+  updateDia(id: string, data: PlanejamentoDiaUpdateInput): Promise<PlanejamentoDia | null>;
+  deleteDia(id: string): Promise<boolean>;
+  createAtividade(data: PlanejamentoAtividadeInput): Promise<PlanejamentoAtividade>;
+  updateAtividade(
+    id: string,
+    data: PlanejamentoAtividadeUpdateInput
+  ): Promise<PlanejamentoAtividade | null>;
+  deleteAtividade(id: string): Promise<boolean>;
+  reorderAtividades(diaId: string, orderedIds: string[]): Promise<PlanejamentoAtividade[]>;
 }
 
 export type { Camiseta, Crianca, Evento, Participante, ParticipanteCompleto };

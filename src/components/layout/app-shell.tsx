@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Calendar,
+  CalendarClock,
   ClipboardCheck,
   Home,
   LogOut,
@@ -27,6 +28,7 @@ import { formatDate } from "@/lib/utils";
 const navItems = [
   { href: "/", label: "Início", icon: Home },
   { href: "/participantes", label: "Participantes", icon: Users },
+  { href: "/planejamento", label: "Planejamento", icon: CalendarClock },
   { href: "/checkin", label: "Check-in", icon: ClipboardCheck },
   { href: "/retirada", label: "Retirada", icon: Shirt },
 ];
