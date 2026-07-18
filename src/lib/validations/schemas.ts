@@ -76,7 +76,47 @@ export const participanteSchema = z.object({
   criancas: z.array(criancaInputSchema).default([]),
 });
 
+const horarioInicioField = z
+  .string()
+  .regex(/^([01]?\d|2[0-3]):[0-5]\d$/, "Horário inválido. Use HH:mm");
+
+export const planejamentoDiaSchema = z.object({
+  eventoId: z.string().uuid("Evento inválido"),
+  nome: z.string().min(1, "Nome do dia obrigatório").default("Dia 1"),
+  horarioInicio: horarioInicioField,
+});
+
+export const planejamentoDiaUpdateSchema = z.object({
+  nome: z.string().min(1, "Nome do dia obrigatório").optional(),
+  horarioInicio: horarioInicioField.optional(),
+});
+
+export const planejamentoAtividadeSchema = z.object({
+  diaId: z.string().uuid("Dia inválido"),
+  duracaoMinutos: z.number().int().min(1, "Duração deve ser pelo menos 1 minuto"),
+  descricao: z.string().min(1, "Descrição obrigatória"),
+  responsavel: z.string().optional(),
+});
+
+export const planejamentoAtividadeUpdateSchema = z.object({
+  duracaoMinutos: z.number().int().min(1, "Duração deve ser pelo menos 1 minuto").optional(),
+  descricao: z.string().min(1, "Descrição obrigatória").optional(),
+  responsavel: z.string().nullable().optional(),
+});
+
+export const planejamentoReorderSchema = z.object({
+  diaId: z.string().uuid("Dia inválido"),
+  orderedIds: z.array(z.string().uuid()).min(1, "Lista de IDs obrigatória"),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type UsuarioSistemaInput = z.infer<typeof usuarioSistemaSchema>;
 export type EventoInput = z.infer<typeof eventoSchema>;
 export type ParticipanteInput = z.infer<typeof participanteSchema>;
+export type PlanejamentoDiaInput = z.infer<typeof planejamentoDiaSchema>;
+export type PlanejamentoDiaUpdateInput = z.infer<typeof planejamentoDiaUpdateSchema>;
+export type PlanejamentoAtividadeInput = z.infer<typeof planejamentoAtividadeSchema>;
+export type PlanejamentoAtividadeUpdateInput = z.infer<
+  typeof planejamentoAtividadeUpdateSchema
+>;
+export type PlanejamentoReorderInput = z.infer<typeof planejamentoReorderSchema>;

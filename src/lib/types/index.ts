@@ -86,6 +86,35 @@ export interface ParticipanteCompleto extends Participante {
   criancas: Crianca[];
 }
 
+export interface PlanejamentoAtividade {
+  id: string;
+  diaId: string;
+  duracaoMinutos: number;
+  descricao: string;
+  responsavel?: string;
+  ordem: number;
+  criadoEm: string;
+}
+
+export interface PlanejamentoAtividadeComHorario extends PlanejamentoAtividade {
+  horarioInicio: string;
+  horarioFim: string;
+}
+
+export interface PlanejamentoDia {
+  id: string;
+  eventoId: string;
+  nome: string;
+  ordem: number;
+  horarioInicio: string;
+  criadoEm: string;
+}
+
+export interface PlanejamentoDiaCompleto extends PlanejamentoDia {
+  atividades: PlanejamentoAtividadeComHorario[];
+  horarioTermino?: string;
+}
+
 export interface RelatorioEvento {
   eventoId: string;
   totalParticipantes: number;

@@ -1,12 +1,22 @@
 import bcrypt from "bcryptjs";
+import { calcularHorarios } from "@/lib/planejamento/horarios";
 import {
   getEventoRepository,
   getParticipanteRepository,
+  getPlanejamentoRepository,
   getRelatorioRepository,
   getUsuarioRepository,
 } from "@/lib/repositories";
 import type { ParticipanteListFilters } from "@/lib/repositories/interfaces";
-import type { ParticipanteInput, UsuarioSistemaInput } from "@/lib/validations/schemas";
+import type {
+  ParticipanteInput,
+  PlanejamentoAtividadeInput,
+  PlanejamentoAtividadeUpdateInput,
+  PlanejamentoDiaInput,
+  PlanejamentoDiaUpdateInput,
+  UsuarioSistemaInput,
+} from "@/lib/validations/schemas";
+import type { PlanejamentoDiaCompleto } from "@/lib/types";
 
 export class AuthService {
   private usuarioRepo = getUsuarioRepository();
@@ -144,5 +154,108 @@ export class RelatorioService {
     const relatorio = await this.relatorioRepo.gerar(eventoId);
     if (!relatorio) throw new Error("Evento não encontrado");
     return relatorio;
+  }
+}
+
+export class PlanejamentoService {
+  private planejamentoRepo = getPlanejamentoRepository();
+  private eventoRepo = getEventoRepository();
+
+  private async enrichDia(
+    dia: NonNullable<Awaited<ReturnType<typeof this.planejamentoRepo.findDiaById>>>,
+    atividades: Awaited<ReturnType<typeof this.planejamentoRepo.findAtividadesByDia>>
+  ): Promise<PlanejamentoDiaCompleto> {
+    const { atividades: comHorario, horarioTermino } = calcularHorarios(
+      dia.horarioInicio,
+      atividades
+    );
+    return {
+      ...dia,
+      atividades: comHorario,
+      horarioTermino,
+    };
+  }
+
+  async listByEvento(eventoId: string): Promise<PlanejamentoDiaCompleto[]> {
+    const evento = await this.eventoRepo.findById(eventoId);
+    if (!evento) throw new Error("Evento não encontrado");
+
+    const dias = await this.planejamentoRepo.findDiasByEvento(eventoId);
+    const atividades = await this.planejamentoRepo.findAtividadesByDias(
+      dias.map((d) => d.id)
+    );
+    const byDia = new Map<string, typeof atividades>();
+    for (const a of atividades) {
+      const list = byDia.get(a.diaId) ?? [];
+      list.push(a);
+      byDia.set(a.diaId, list);
+    }
+
+    return Promise.all(
+      dias.map((dia) => this.enrichDia(dia, byDia.get(dia.id) ?? []))
+    );
+  }
+
+  async createDia(data: PlanejamentoDiaInput): Promise<PlanejamentoDiaCompleto> {
+    const evento = await this.eventoRepo.findById(data.eventoId);
+    if (!evento) throw new Error("Evento não encontrado");
+    const dia = await this.planejamentoRepo.createDia(data);
+    return this.enrichDia(dia, []);
+  }
+
+  async updateDia(
+    id: string,
+    data: PlanejamentoDiaUpdateInput
+  ): Promise<PlanejamentoDiaCompleto> {
+    const updated = await this.planejamentoRepo.updateDia(id, data);
+    if (!updated) throw new Error("Dia não encontrado");
+    const atividades = await this.planejamentoRepo.findAtividadesByDia(id);
+    return this.enrichDia(updated, atividades);
+  }
+
+  async deleteDia(id: string) {
+    const deleted = await this.planejamentoRepo.deleteDia(id);
+    if (!deleted) throw new Error("Dia não encontrado");
+    return true;
+  }
+
+  async createAtividade(data: PlanejamentoAtividadeInput) {
+    const dia = await this.planejamentoRepo.findDiaById(data.diaId);
+    if (!dia) throw new Error("Dia não encontrado");
+    await this.planejamentoRepo.createAtividade(data);
+    const atividades = await this.planejamentoRepo.findAtividadesByDia(data.diaId);
+    return this.enrichDia(dia, atividades);
+  }
+
+  async updateAtividade(id: string, data: PlanejamentoAtividadeUpdateInput) {
+    const existing = await this.planejamentoRepo.findAtividadeById(id);
+    if (!existing) throw new Error("Atividade não encontrada");
+    const updated = await this.planejamentoRepo.updateAtividade(id, data);
+    if (!updated) throw new Error("Atividade não encontrada");
+    const dia = await this.planejamentoRepo.findDiaById(updated.diaId);
+    if (!dia) throw new Error("Dia não encontrado");
+    const atividades = await this.planejamentoRepo.findAtividadesByDia(dia.id);
+    return this.enrichDia(dia, atividades);
+  }
+
+  async deleteAtividade(id: string) {
+    const existing = await this.planejamentoRepo.findAtividadeById(id);
+    if (!existing) throw new Error("Atividade não encontrada");
+    const deleted = await this.planejamentoRepo.deleteAtividade(id);
+    if (!deleted) throw new Error("Atividade não encontrada");
+    const dia = await this.planejamentoRepo.findDiaById(existing.diaId);
+    if (!dia) throw new Error("Dia não encontrado");
+    const atividades = await this.planejamentoRepo.findAtividadesByDia(dia.id);
+    return this.enrichDia(dia, atividades);
+  }
+
+  async reorderAtividades(diaId: string, orderedIds: string[]) {
+    const dia = await this.planejamentoRepo.findDiaById(diaId);
+    if (!dia) throw new Error("Dia não encontrado");
+    const atividades = await this.planejamentoRepo.reorderAtividades(
+      diaId,
+      orderedIds
+    );
+    return this.enrichDia(dia, atividades);
   }
 }

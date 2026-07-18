@@ -99,3 +99,30 @@ export const criancas = pgTable("criancas", {
   pagamento: pagamentoEnum("pagamento").notNull().default("NAO"),
   valorPago: real("valor_pago"),
 });
+
+export const planejamentoDias = pgTable("planejamento_dias", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  eventoId: uuid("evento_id")
+    .notNull()
+    .references(() => eventos.id, { onDelete: "cascade" }),
+  nome: text("nome").notNull(),
+  ordem: integer("ordem").notNull(),
+  horarioInicio: text("horario_inicio").notNull(),
+  criadoEm: timestamp("criado_em", { withTimezone: true, mode: "string" })
+    .notNull()
+    .defaultNow(),
+});
+
+export const planejamentoAtividades = pgTable("planejamento_atividades", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  diaId: uuid("dia_id")
+    .notNull()
+    .references(() => planejamentoDias.id, { onDelete: "cascade" }),
+  duracaoMinutos: integer("duracao_minutos").notNull(),
+  descricao: text("descricao").notNull(),
+  responsavel: text("responsavel"),
+  ordem: integer("ordem").notNull(),
+  criadoEm: timestamp("criado_em", { withTimezone: true, mode: "string" })
+    .notNull()
+    .defaultNow(),
+});
