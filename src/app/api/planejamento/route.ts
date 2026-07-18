@@ -1,14 +1,14 @@
 import { cookies } from "next/headers";
 import { ensureSeed } from "@/lib/db/seed";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api/response";
-import { requireAuth } from "@/lib/auth/helpers";
+import { requireMenuAccess } from "@/lib/auth/helpers";
 import { EVENTO_COOKIE } from "@/lib/auth/session";
 import { PlanejamentoService } from "@/lib/services";
 
 export async function GET(request: Request) {
   try {
     await ensureSeed();
-    await requireAuth();
+    await requireMenuAccess("planejamento");
     const { searchParams } = new URL(request.url);
     const cookieStore = await cookies();
     const eventoId =

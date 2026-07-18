@@ -2,7 +2,12 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { ensureSeed } from "@/lib/db/seed";
-import { apiError, apiSuccess } from "@/lib/api/response";
+import { apiError } from "@/lib/api/response";
+import {
+  LOGIN_BLOCKED_MESSAGE,
+  LOGIN_INVALID_MESSAGE,
+} from "@/lib/auth/login-limits";
+import { getClientIp, getUserAgent } from "@/lib/auth/request-meta";
 import { sessionOptions, type SessionData } from "@/lib/auth/session";
 import { AuthService } from "@/lib/services";
 import { loginSchema } from "@/lib/validations/schemas";
@@ -17,17 +22,34 @@ export async function POST(request: NextRequest) {
     }
 
     const authService = new AuthService();
-    const user = await authService.login(parsed.data.username, parsed.data.senha);
-    if (!user) {
-      return apiError("Usuário ou senha inválidos", 401);
+    const result = await authService.login(
+      parsed.data.username,
+      parsed.data.senha,
+      {
+        ip: getClientIp(request),
+        userAgent: getUserAgent(request),
+      }
+    );
+
+    if (!result.ok) {
+      if (result.reason === "blocked") {
+        return apiError(LOGIN_BLOCKED_MESSAGE, 403);
+      }
+      if (result.remainingAttempts != null && result.remainingAttempts > 0) {
+        return apiError(
+          `${LOGIN_INVALID_MESSAGE}. Tentativas restantes: ${result.remainingAttempts}`,
+          401
+        );
+      }
+      return apiError(LOGIN_INVALID_MESSAGE, 401);
     }
 
     const response = NextResponse.json({
       data: {
-        userId: user.userId,
-        username: user.username,
-        nome: user.nome,
-        role: user.role,
+        userId: result.user.userId,
+        username: result.user.username,
+        nome: result.user.nome,
+        role: result.user.role,
       },
     });
 
@@ -36,10 +58,11 @@ export async function POST(request: NextRequest) {
       response,
       sessionOptions
     );
-    session.userId = user.userId;
-    session.username = user.username;
-    session.nome = user.nome;
-    session.role = user.role;
+    session.userId = result.user.userId;
+    session.username = result.user.username;
+    session.nome = result.user.nome;
+    session.role = result.user.role;
+    session.permissoes = result.user.permissoes;
     session.isLoggedIn = true;
     await session.save();
 

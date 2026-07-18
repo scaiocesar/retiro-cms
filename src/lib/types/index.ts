@@ -1,6 +1,9 @@
 export type UserRole = "ADMIN" | "USUARIO";
 
+import type { AccessLevel, MenuKey, UserPermissions } from "@/lib/auth/permissions";
 import type { PagamentoTipo } from "@/lib/pagamento";
+
+export type { AccessLevel, MenuKey, UserPermissions };
 
 export type PagamentoInscricao = PagamentoTipo;
 export type PagamentoCamiseta = PagamentoTipo;
@@ -24,6 +27,8 @@ export interface UsuarioSistema {
   senhaHash: string;
   role: UserRole;
   ativo: boolean;
+  tentativasLogin: number;
+  permissoes: UserPermissions;
   criadoEm: string;
 }
 
@@ -33,8 +38,33 @@ export interface UsuarioSistemaPublic {
   username: string;
   role: UserRole;
   ativo: boolean;
+  permissoes: UserPermissions;
   criadoEm: string;
 }
+
+export type LoginResultado =
+  | "SUCESSO"
+  | "SENHA_INVALIDA"
+  | "BLOQUEADO"
+  | "USUARIO_INEXISTENTE";
+
+export interface LoginHistoricoEntry {
+  id: string;
+  usuarioId?: string;
+  username: string;
+  resultado: LoginResultado;
+  ip?: string;
+  userAgent?: string;
+  criadoEm: string;
+  usuarioNome?: string;
+}
+
+export const LOGIN_RESULTADO_LABELS: Record<LoginResultado, string> = {
+  SUCESSO: "Sucesso",
+  SENHA_INVALIDA: "Senha inválida",
+  BLOQUEADO: "Conta bloqueada",
+  USUARIO_INEXISTENTE: "Usuário inexistente",
+};
 
 export interface Evento {
   id: string;

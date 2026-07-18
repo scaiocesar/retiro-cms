@@ -1,6 +1,6 @@
 import { ensureSeed } from "@/lib/db/seed";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api/response";
-import { requireAuth } from "@/lib/auth/helpers";
+import { requireAuth, requireMenuEdit } from "@/lib/auth/helpers";
 import { ParticipanteService } from "@/lib/services";
 import { normalizeSearchTerm } from "@/lib/search";
 import {
@@ -39,7 +39,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     await ensureSeed();
-    const session = await requireAuth();
+    const session = await requireMenuEdit("participantes");
     const body = await request.json();
     const parsed = participanteSchema.safeParse(body);
     if (!parsed.success) {

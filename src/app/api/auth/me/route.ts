@@ -13,5 +13,6 @@ export async function GET() {
     username: session.username,
     nome: session.nome,
     role: session.role,
+    permissoes: session.permissoes,
   });
 }

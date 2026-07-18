@@ -19,7 +19,11 @@ import {
 import type { Evento } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
-export default function EventosPageClient() {
+export default function EventosPageClient({
+  canEdit = true,
+}: {
+  canEdit?: boolean;
+}) {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -95,36 +99,44 @@ export default function EventosPageClient() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Eventos</h1>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" onClick={openCreate}>
-              <Plus className="h-4 w-4" />
-              Novo
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{editing ? "Editar evento" : "Novo evento"}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Nome</Label>
-                <Input value={nome} onChange={(e) => setNome(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Data</Label>
-                <Input type="date" value={data} onChange={(e) => setData(e.target.value)} />
-              </div>
-              <div className="flex items-center gap-3">
-                <Switch checked={ativo} onCheckedChange={setAtivo} />
-                <Label>Ativo</Label>
-              </div>
-              <Button onClick={handleSave} disabled={saving} className="w-full">
-                {saving ? "Salvando..." : "Salvar"}
+        {canEdit ? (
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" onClick={openCreate}>
+                <Plus className="h-4 w-4" />
+                Novo
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {editing ? "Editar evento" : "Novo evento"}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Nome</Label>
+                  <Input value={nome} onChange={(e) => setNome(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Data</Label>
+                  <Input
+                    type="date"
+                    value={data}
+                    onChange={(e) => setData(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center gap-3">
+                  <Switch checked={ativo} onCheckedChange={setAtivo} />
+                  <Label>Ativo</Label>
+                </div>
+                <Button onClick={handleSave} disabled={saving} className="w-full">
+                  {saving ? "Salvando..." : "Salvar"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        ) : null}
       </div>
 
       {loading ? (
@@ -142,9 +154,11 @@ export default function EventosPageClient() {
                   <Badge variant={e.ativo ? "success" : "secondary"}>
                     {e.ativo ? "Ativo" : "Inativo"}
                   </Badge>
-                  <Button variant="ghost" size="icon" onClick={() => openEdit(e)}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
+                  {canEdit ? (
+                    <Button variant="ghost" size="icon" onClick={() => openEdit(e)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  ) : null}
                 </div>
               </CardContent>
             </Card>

@@ -1,4 +1,10 @@
 import { v4 as uuidv4 } from "uuid";
+import { MAX_FAILED_LOGINS } from "@/lib/auth/login-limits";
+import {
+  DEFAULT_USUARIO_PERMISSIONS,
+  FULL_PERMISSIONS,
+  normalizePermissions,
+} from "@/lib/auth/permissions";
 import { getStore } from "@/lib/db/in-memory-store";
 import type { UsuarioSistema, UsuarioSistemaPublic } from "@/lib/types";
 import type { UsuarioSistemaInput } from "@/lib/validations/schemas";
@@ -11,6 +17,7 @@ function toPublic(user: UsuarioSistema): UsuarioSistemaPublic {
     username: user.username,
     role: user.role,
     ativo: user.ativo,
+    permissoes: user.permissoes,
     criadoEm: user.criadoEm,
   };
 }
@@ -41,6 +48,11 @@ export class InMemoryUsuarioRepository implements IUsuarioRepository {
       senhaHash: data.senhaHash,
       role: data.role,
       ativo: data.ativo ?? true,
+      tentativasLogin: 0,
+      permissoes:
+        data.role === "ADMIN"
+          ? { ...FULL_PERMISSIONS }
+          : normalizePermissions(data.permissoes ?? DEFAULT_USUARIO_PERMISSIONS),
       criadoEm: new Date().toISOString(),
     };
     getStore().usuarios.set(user.id, user);
@@ -49,21 +61,54 @@ export class InMemoryUsuarioRepository implements IUsuarioRepository {
 
   async update(
     id: string,
-    data: Partial<UsuarioSistemaInput & { senhaHash?: string }>
+    data: Partial<UsuarioSistemaInput & { senhaHash?: string; tentativasLogin?: number }>
   ): Promise<UsuarioSistemaPublic | null> {
     const store = getStore();
     const existing = store.usuarios.get(id);
     if (!existing) return null;
 
+    const role = data.role ?? existing.role;
     const updated: UsuarioSistema = {
       ...existing,
       nome: data.nome ?? existing.nome,
       username: data.username?.toLowerCase() ?? existing.username,
       senhaHash: data.senhaHash ?? existing.senhaHash,
-      role: data.role ?? existing.role,
+      role,
       ativo: data.ativo ?? existing.ativo,
+      tentativasLogin:
+        data.tentativasLogin !== undefined
+          ? data.tentativasLogin
+          : existing.tentativasLogin,
+      permissoes:
+        role === "ADMIN"
+          ? { ...FULL_PERMISSIONS }
+          : data.permissoes
+            ? normalizePermissions(data.permissoes)
+            : existing.permissoes,
     };
     store.usuarios.set(id, updated);
     return toPublic(updated);
+  }
+
+  async registerFailedLogin(id: string): Promise<UsuarioSistema | null> {
+    const store = getStore();
+    const existing = store.usuarios.get(id);
+    if (!existing) return null;
+
+    const tentativasLogin = existing.tentativasLogin + 1;
+    const updated: UsuarioSistema = {
+      ...existing,
+      tentativasLogin,
+      ativo: tentativasLogin <= MAX_FAILED_LOGINS,
+    };
+    store.usuarios.set(id, updated);
+    return updated;
+  }
+
+  async resetLoginAttempts(id: string): Promise<void> {
+    const store = getStore();
+    const existing = store.usuarios.get(id);
+    if (!existing) return;
+    store.usuarios.set(id, { ...existing, tentativasLogin: 0 });
   }
 }

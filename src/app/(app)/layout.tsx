@@ -19,6 +19,7 @@ export default async function AppLayout({
     <AppShell
       userName={ctx.session.nome}
       userRole={ctx.session.role}
+      permissoes={ctx.session.permissoes}
       eventosAtivos={ctx.eventosAtivos}
       eventoAtivo={ctx.eventoAtivo}
       showEventoSelector={ctx.showEventoSelector}

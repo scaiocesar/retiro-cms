@@ -38,9 +38,25 @@ function MiniStat({
   );
 }
 
-function BreakdownRow({ label, value }: { label: string; value: number }) {
+function BreakdownRow({
+  label,
+  value,
+  striped,
+}: {
+  label: string;
+  value: number;
+  striped?: boolean;
+}) {
   return (
-    <div className="flex items-center justify-between gap-4 text-sm">
+    <div
+      className={
+        striped === undefined
+          ? "flex items-center justify-between gap-4 text-sm"
+          : `flex items-center justify-between gap-4 px-3 py-2 text-sm ${
+              striped ? "bg-muted/60" : "bg-card"
+            }`
+      }
+    >
       <span className="text-muted-foreground">{label}</span>
       <span className="font-semibold tabular-nums">{value}</span>
     </div>
@@ -288,10 +304,17 @@ export function RelatorioResumo({
                   {Object.keys(relatorio.camisetasPorTamanho).length === 0 ? (
                     <p className="text-sm text-muted-foreground">Nenhuma camiseta cadastrada</p>
                   ) : (
-                    <div className="space-y-2">
-                      {Object.entries(relatorio.camisetasPorTamanho).map(([tamanho, qtd]) => (
-                        <BreakdownRow key={tamanho} label={tamanho} value={qtd} />
-                      ))}
+                    <div className="overflow-hidden rounded-lg border">
+                      {Object.entries(relatorio.camisetasPorTamanho).map(
+                        ([tamanho, qtd], index) => (
+                          <BreakdownRow
+                            key={tamanho}
+                            label={tamanho}
+                            value={qtd}
+                            striped={index % 2 === 1}
+                          />
+                        )
+                      )}
                     </div>
                   )}
                 </CardContent>

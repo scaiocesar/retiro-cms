@@ -36,6 +36,8 @@ export const usuarios = pgTable("usuarios", {
   senhaHash: text("senha_hash").notNull(),
   role: userRoleEnum("role").notNull(),
   ativo: boolean("ativo").notNull().default(true),
+  tentativasLogin: integer("tentativas_login").notNull().default(0),
+  permissoes: text("permissoes"),
   criadoEm: timestamp("criado_em", { withTimezone: true, mode: "string" })
     .notNull()
     .defaultNow(),
@@ -122,6 +124,27 @@ export const planejamentoAtividades = pgTable("planejamento_atividades", {
   descricao: text("descricao").notNull(),
   responsavel: text("responsavel"),
   ordem: integer("ordem").notNull(),
+  criadoEm: timestamp("criado_em", { withTimezone: true, mode: "string" })
+    .notNull()
+    .defaultNow(),
+});
+
+export const loginResultadoEnum = pgEnum("login_resultado", [
+  "SUCESSO",
+  "SENHA_INVALIDA",
+  "BLOQUEADO",
+  "USUARIO_INEXISTENTE",
+]);
+
+export const loginHistorico = pgTable("login_historico", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  usuarioId: uuid("usuario_id").references(() => usuarios.id, {
+    onDelete: "set null",
+  }),
+  username: text("username").notNull(),
+  resultado: loginResultadoEnum("resultado").notNull(),
+  ip: text("ip"),
+  userAgent: text("user_agent"),
   criadoEm: timestamp("criado_em", { withTimezone: true, mode: "string" })
     .notNull()
     .defaultNow(),

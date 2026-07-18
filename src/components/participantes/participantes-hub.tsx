@@ -7,8 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 export default function ParticipantesHub({
   hasEvento,
+  canEdit = true,
 }: {
   hasEvento: boolean;
+  canEdit?: boolean;
 }) {
   if (!hasEvento) {
     return (
@@ -26,20 +28,22 @@ export default function ParticipantesHub({
       </div>
 
       <div className="grid gap-4">
-        <Card className="transition-colors hover:border-primary/40">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <UserPlus className="h-5 w-5 text-primary" />
-              Cadastrar participante
-            </CardTitle>
-            <CardDescription>Adicionar uma nova inscrição ao retiro</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full" size="lg">
-              <Link href="/participantes/novo">Cadastrar participante</Link>
-            </Button>
-          </CardContent>
-        </Card>
+        {canEdit ? (
+          <Card className="transition-colors hover:border-primary/40">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <UserPlus className="h-5 w-5 text-primary" />
+                Cadastrar participante
+              </CardTitle>
+              <CardDescription>Adicionar uma nova inscrição ao retiro</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full" size="lg">
+                <Link href="/participantes/novo">Cadastrar participante</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : null}
 
         <Card className="transition-colors hover:border-primary/40">
           <CardHeader>

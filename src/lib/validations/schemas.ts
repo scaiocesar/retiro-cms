@@ -24,6 +24,15 @@ export const usuarioSistemaSchema = z.object({
   senha: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").optional(),
   role: z.enum(["ADMIN", "USUARIO"]),
   ativo: z.boolean().optional(),
+  permissoes: z
+    .object({
+      participantes: z.enum(["none", "read", "edit"]),
+      planejamento: z.enum(["none", "read", "edit"]),
+      checkin: z.enum(["none", "read", "edit"]),
+      retirada: z.enum(["none", "read", "edit"]),
+      eventos: z.enum(["none", "read", "edit"]),
+    })
+    .optional(),
 });
 
 export const eventoSchema = z.object({

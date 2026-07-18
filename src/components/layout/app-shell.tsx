@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -22,26 +23,36 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  canAccess,
+  menuKeyFromPath,
+  type MenuKey,
+  type UserPermissions,
+} from "@/lib/auth/permissions";
 import type { Evento, UserRole } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
-const navItems = [
-  { href: "/", label: "Início", icon: Home },
-  { href: "/participantes", label: "Participantes", icon: Users },
-  { href: "/planejamento", label: "Planejamento", icon: CalendarClock },
-  { href: "/checkin", label: "Check-in", icon: ClipboardCheck },
-  { href: "/retirada", label: "Retirada", icon: Shirt },
-];
-
-const adminNavItems = [
-  { href: "/eventos", label: "Eventos", icon: Calendar },
-  { href: "/usuarios", label: "Usuários", icon: UserCog },
+const navItems: Array<{
+  href: string;
+  label: string;
+  icon: typeof Home;
+  menu: MenuKey | null;
+  adminOnly?: boolean;
+}> = [
+  { href: "/", label: "Início", icon: Home, menu: null },
+  { href: "/participantes", label: "Participantes", icon: Users, menu: "participantes" },
+  { href: "/planejamento", label: "Planejamento", icon: CalendarClock, menu: "planejamento" },
+  { href: "/checkin", label: "Check-in", icon: ClipboardCheck, menu: "checkin" },
+  { href: "/retirada", label: "Retirada", icon: Shirt, menu: "retirada" },
+  { href: "/eventos", label: "Eventos", icon: Calendar, menu: "eventos" },
+  { href: "/usuarios", label: "Usuários", icon: UserCog, menu: null, adminOnly: true },
 ];
 
 export function AppShell({
   children,
   userName,
   userRole,
+  permissoes,
   eventosAtivos,
   eventoAtivo,
   showEventoSelector,
@@ -49,14 +60,30 @@ export function AppShell({
   children: React.ReactNode;
   userName: string;
   userRole: UserRole;
+  permissoes: UserPermissions;
   eventosAtivos: Evento[];
   eventoAtivo: Evento | null;
   showEventoSelector: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const isAdmin = userRole === "ADMIN";
-  const allNav = isAdmin ? [...navItems, ...adminNavItems] : navItems;
+
+  const allNav = navItems.filter((item) => {
+    if (item.adminOnly) return userRole === "ADMIN";
+    if (!item.menu) return true;
+    return canAccess(userRole, permissoes, item.menu);
+  });
+
+  useEffect(() => {
+    const menu = menuKeyFromPath(pathname);
+    if (menu === "usuarios" && userRole !== "ADMIN") {
+      router.replace("/");
+      return;
+    }
+    if (menu && menu !== "usuarios" && !canAccess(userRole, permissoes, menu)) {
+      router.replace("/");
+    }
+  }, [pathname, userRole, permissoes, router]);
 
   async function handleLogout() {
     try {
@@ -92,14 +119,17 @@ export function AppShell({
         <nav className="flex-1 space-y-1 p-4">
           {allNav.map((item) => {
             const Icon = item.icon;
-            const active = pathname === item.href || pathname.startsWith(item.href + "/");
+            const active =
+              pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                  active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"
+                  active
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-secondary"
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -109,7 +139,11 @@ export function AppShell({
           })}
         </nav>
         <div className="border-t border-border p-4">
-          <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>
+          <Button
+            variant="ghost"
+            className="w-full justify-start"
+            onClick={handleLogout}
+          >
             <LogOut className="mr-2 h-4 w-4" />
             Sair
           </Button>
@@ -139,12 +173,25 @@ export function AppShell({
               ) : eventoAtivo ? (
                 <div>
                   <p className="font-medium truncate">{eventoAtivo.nome}</p>
-                  <p className="text-xs text-muted-foreground">{formatDate(eventoAtivo.data)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatDate(eventoAtivo.data)}
+                  </p>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">Nenhum retiro ativo</p>
+                <p className="text-sm text-muted-foreground">
+                  Nenhum retiro ativo
+                </p>
               )}
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="shrink-0"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4" />
+              Sair
+            </Button>
           </div>
         </header>
 
@@ -153,7 +200,8 @@ export function AppShell({
         <nav className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-border bg-card md:hidden">
           {allNav.map((item) => {
             const Icon = item.icon;
-            const active = pathname === item.href || pathname.startsWith(item.href + "/");
+            const active =
+              pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link
                 key={item.href}

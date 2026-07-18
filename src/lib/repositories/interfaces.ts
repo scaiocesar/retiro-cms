@@ -2,6 +2,8 @@ import type {
   Camiseta,
   Crianca,
   Evento,
+  LoginHistoricoEntry,
+  LoginResultado,
   PagamentoInscricao,
   Participante,
   ParticipanteCompleto,
@@ -26,7 +28,21 @@ export interface IUsuarioRepository {
   findById(id: string): Promise<UsuarioSistema | null>;
   findByUsername(username: string): Promise<UsuarioSistema | null>;
   create(data: UsuarioSistemaInput & { senhaHash: string }): Promise<UsuarioSistemaPublic>;
-  update(id: string, data: Partial<UsuarioSistemaInput & { senhaHash?: string }>): Promise<UsuarioSistemaPublic | null>;
+  update(id: string, data: Partial<UsuarioSistemaInput & { senhaHash?: string; tentativasLogin?: number }>): Promise<UsuarioSistemaPublic | null>;
+  registerFailedLogin(id: string): Promise<UsuarioSistema | null>;
+  resetLoginAttempts(id: string): Promise<void>;
+}
+
+export interface ILoginHistoricoRepository {
+  create(data: {
+    usuarioId?: string | null;
+    username: string;
+    resultado: LoginResultado;
+    ip?: string | null;
+    userAgent?: string | null;
+  }): Promise<LoginHistoricoEntry>;
+  list(limit?: number): Promise<LoginHistoricoEntry[]>;
+  listByUsuario(usuarioId: string, limit?: number): Promise<LoginHistoricoEntry[]>;
 }
 
 export interface IEventoRepository {

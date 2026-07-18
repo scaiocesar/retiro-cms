@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { ensureSeed } from "@/lib/db/seed";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api/response";
-import { requireAdmin, requireAuth } from "@/lib/auth/helpers";
+import { requireAuth, requireMenuEdit } from "@/lib/auth/helpers";
 import { EVENTO_COOKIE } from "@/lib/auth/session";
 import { getCookieSecure } from "@/lib/auth/cookie-options";
 import { EventoService } from "@/lib/services";
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     await ensureSeed();
-    await requireAdmin();
+    await requireMenuEdit("eventos");
     const body = await request.json();
     const parsed = eventoSchema.safeParse(body);
     if (!parsed.success) {
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   try {
     await ensureSeed();
-    await requireAdmin();
+    await requireMenuEdit("eventos");
     const body = await request.json();
     const { id, ...data } = body;
     if (!id) return apiError("ID obrigatório");

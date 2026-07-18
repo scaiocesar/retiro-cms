@@ -81,6 +81,7 @@ function SortableAtividadeCard({
   atividade,
   editing,
   saving,
+  canEdit = true,
   onStartEdit,
   onCancelEdit,
   onSave,
@@ -90,6 +91,7 @@ function SortableAtividadeCard({
   atividade: PlanejamentoAtividadeComHorario;
   editing: boolean;
   saving: boolean;
+  canEdit?: boolean;
   onStartEdit: () => void;
   onCancelEdit: () => void;
   onSave: (data: {
@@ -107,7 +109,7 @@ function SortableAtividadeCard({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: atividade.id, disabled: editing });
+  } = useSortable({ id: atividade.id, disabled: editing || !canEdit });
 
   const [duracao, setDuracao] = useState(
     formatDuracao(atividade.duracaoMinutos)
@@ -158,7 +160,7 @@ function SortableAtividadeCard({
           type="button"
           className="mt-1 cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing disabled:cursor-default disabled:opacity-40"
           aria-label="Arrastar para reordenar"
-          disabled={editing}
+          disabled={editing || !canEdit}
           {...attributes}
           {...listeners}
         >
@@ -219,52 +221,54 @@ function SortableAtividadeCard({
         )}
 
         <div className="flex shrink-0 gap-1">
-          {editing ? (
-            <>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => void handleSave()}
-                disabled={saving}
-                aria-label="Salvar"
-              >
-                <Check className="h-4 w-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={onCancelEdit}
-                disabled={saving}
-                aria-label="Cancelar"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={beginEdit}
-                aria-label="Editar atividade"
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={onDelete}
-                disabled={deleting}
-                aria-label="Excluir atividade"
-              >
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
-            </>
-          )}
+          {canEdit ? (
+            editing ? (
+              <>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => void handleSave()}
+                  disabled={saving}
+                  aria-label="Salvar"
+                >
+                  <Check className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={onCancelEdit}
+                  disabled={saving}
+                  aria-label="Cancelar"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={beginEdit}
+                  aria-label="Editar atividade"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={onDelete}
+                  disabled={deleting}
+                  aria-label="Excluir atividade"
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </>
+            )
+          ) : null}
         </div>
       </CardContent>
     </Card>
@@ -358,8 +362,10 @@ function NovaAtividadeRow({
 
 export default function PlanejamentoPageClient({
   eventoId,
+  canEdit = true,
 }: {
   eventoId: string | null;
+  canEdit?: boolean;
 }) {
   const [dias, setDias] = useState<PlanejamentoDiaCompleto[]>([]);
   const [selectedDiaId, setSelectedDiaId] = useState<string | null>(null);
@@ -687,6 +693,13 @@ export default function PlanejamentoPageClient({
   }
 
   if (dias.length === 0) {
+    if (!canEdit) {
+      return (
+        <p className="py-12 text-center text-muted-foreground">
+          Nenhum cronograma cadastrado ainda.
+        </p>
+      );
+    }
     return (
       <div className="mx-auto max-w-md space-y-6">
         <div>
@@ -736,8 +749,9 @@ export default function PlanejamentoPageClient({
         <div>
           <h1 className="text-2xl font-bold">Planejamento</h1>
           <p className="text-sm text-muted-foreground">
-            Arraste as atividades para reordenar. Os horários são calculados
-            automaticamente.
+            {canEdit
+              ? "Arraste as atividades para reordenar. Os horários são calculados automaticamente."
+              : "Visualização do cronograma (somente leitura)."}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -750,18 +764,20 @@ export default function PlanejamentoPageClient({
             <FileDown className="h-4 w-4" />
             {exporting ? "Gerando…" : "Imprimir PDF"}
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setAddDiaNome(`Dia ${dias.length + 1}`);
-              setAddDiaHorario("08:00");
-              setAddDiaOpen(true);
-            }}
-          >
-            <CalendarPlus className="h-4 w-4" />
-            Adicionar dia
-          </Button>
+          {canEdit ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setAddDiaNome(`Dia ${dias.length + 1}`);
+                setAddDiaHorario("08:00");
+                setAddDiaOpen(true);
+              }}
+            >
+              <CalendarPlus className="h-4 w-4" />
+              Adicionar dia
+            </Button>
+          ) : null}
         </div>
       </div>
 
@@ -795,7 +811,7 @@ export default function PlanejamentoPageClient({
                 type="time"
                 className="w-36"
                 value={diaAtual.horarioInicio}
-                disabled={saving}
+                disabled={saving || !canEdit}
                 onChange={(e) => {
                   const value = e.target.value;
                   if (!value) return;
@@ -836,7 +852,9 @@ export default function PlanejamentoPageClient({
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
-                onDragEnd={(e) => void handleDragEnd(e)}
+                onDragEnd={(e) => {
+                  if (canEdit) void handleDragEnd(e);
+                }}
               >
                 <SortableContext
                   items={diaAtual.atividades.map((a) => a.id)}
@@ -847,8 +865,9 @@ export default function PlanejamentoPageClient({
                       <SortableAtividadeCard
                         key={atividade.id}
                         atividade={atividade}
-                        editing={editingId === atividade.id}
+                        editing={canEdit && editingId === atividade.id}
                         saving={saving}
+                        canEdit={canEdit}
                         onStartEdit={() => setEditingId(atividade.id)}
                         onCancelEdit={() => setEditingId(null)}
                         onSave={(data) =>
@@ -863,11 +882,13 @@ export default function PlanejamentoPageClient({
               </DndContext>
             ) : null}
 
-            <NovaAtividadeRow
-              previewInicio={previewInicioNova}
-              saving={saving}
-              onSave={criarAtividadeInline}
-            />
+            {canEdit ? (
+              <NovaAtividadeRow
+                previewInicio={previewInicioNova}
+                saving={saving}
+                onSave={criarAtividadeInline}
+              />
+            ) : null}
           </div>
 
           {diaAtual.horarioTermino ? (

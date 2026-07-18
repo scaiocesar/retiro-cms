@@ -1,6 +1,6 @@
 import { ensureSeed } from "@/lib/db/seed";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api/response";
-import { requireAuth } from "@/lib/auth/helpers";
+import { requireMenuEdit } from "@/lib/auth/helpers";
 import { PlanejamentoService } from "@/lib/services";
 import { planejamentoDiaUpdateSchema } from "@/lib/validations/schemas";
 
@@ -10,7 +10,7 @@ export async function PATCH(
 ) {
   try {
     await ensureSeed();
-    await requireAuth();
+    await requireMenuEdit("planejamento");
     const { id } = await params;
     const body = await request.json();
     const parsed = planejamentoDiaUpdateSchema.safeParse(body);
@@ -34,7 +34,7 @@ export async function DELETE(
 ) {
   try {
     await ensureSeed();
-    await requireAuth();
+    await requireMenuEdit("planejamento");
     const { id } = await params;
     const service = new PlanejamentoService();
     await service.deleteDia(id);

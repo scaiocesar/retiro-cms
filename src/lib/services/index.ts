@@ -1,7 +1,10 @@
 import bcrypt from "bcryptjs";
+import { MAX_FAILED_LOGINS } from "@/lib/auth/login-limits";
+import { DEFAULT_USUARIO_PERMISSIONS } from "@/lib/auth/permissions";
 import { calcularHorarios } from "@/lib/planejamento/horarios";
 import {
   getEventoRepository,
+  getLoginHistoricoRepository,
   getParticipanteRepository,
   getPlanejamentoRepository,
   getRelatorioRepository,
@@ -16,23 +19,115 @@ import type {
   PlanejamentoDiaUpdateInput,
   UsuarioSistemaInput,
 } from "@/lib/validations/schemas";
-import type { PlanejamentoDiaCompleto } from "@/lib/types";
+import type {
+  LoginResultado,
+  PlanejamentoDiaCompleto,
+  UserPermissions,
+  UserRole,
+} from "@/lib/types";
+
+export type LoginMeta = {
+  ip?: string | null;
+  userAgent?: string | null;
+};
 
 export class AuthService {
   private usuarioRepo = getUsuarioRepository();
+  private loginHistoricoRepo = getLoginHistoricoRepository();
 
-  async login(username: string, senha: string) {
-    const user = await this.usuarioRepo.findByUsername(username);
-    if (!user || !user.ativo) {
-      return null;
+  private async recordLogin(data: {
+    usuarioId?: string | null;
+    username: string;
+    resultado: LoginResultado;
+    meta?: LoginMeta;
+  }) {
+    try {
+      await this.loginHistoricoRepo.create({
+        usuarioId: data.usuarioId,
+        username: data.username,
+        resultado: data.resultado,
+        ip: data.meta?.ip,
+        userAgent: data.meta?.userAgent,
+      });
+    } catch {
+      // Não bloqueia o login se o histórico falhar
     }
+  }
+
+  async login(
+    username: string,
+    senha: string,
+    meta?: LoginMeta
+  ): Promise<
+    | {
+        ok: true;
+        user: {
+          userId: string;
+          username: string;
+          nome: string;
+          role: UserRole;
+          permissoes: UserPermissions;
+        };
+      }
+    | { ok: false; reason: "invalid" | "blocked"; remainingAttempts?: number }
+  > {
+    const user = await this.usuarioRepo.findByUsername(username);
+
+    if (user && !user.ativo) {
+      await this.recordLogin({
+        usuarioId: user.id,
+        username,
+        resultado: "BLOQUEADO",
+        meta,
+      });
+      return { ok: false, reason: "blocked" };
+    }
+
+    if (!user) {
+      await this.recordLogin({
+        username,
+        resultado: "USUARIO_INEXISTENTE",
+        meta,
+      });
+      return { ok: false, reason: "invalid" };
+    }
+
     const valid = await bcrypt.compare(senha, user.senhaHash);
-    if (!valid) return null;
+    if (!valid) {
+      const updated = await this.usuarioRepo.registerFailedLogin(user.id);
+      const blockedNow = Boolean(updated && !updated.ativo);
+      await this.recordLogin({
+        usuarioId: user.id,
+        username,
+        resultado: blockedNow ? "BLOQUEADO" : "SENHA_INVALIDA",
+        meta,
+      });
+      if (blockedNow) {
+        return { ok: false, reason: "blocked" };
+      }
+      const remaining =
+        updated != null
+          ? Math.max(0, MAX_FAILED_LOGINS + 1 - updated.tentativasLogin)
+          : undefined;
+      return { ok: false, reason: "invalid", remainingAttempts: remaining };
+    }
+
+    await this.usuarioRepo.resetLoginAttempts(user.id);
+    await this.recordLogin({
+      usuarioId: user.id,
+      username,
+      resultado: "SUCESSO",
+      meta,
+    });
     return {
-      userId: user.id,
-      username: user.username,
-      nome: user.nome,
-      role: user.role,
+      ok: true,
+      user: {
+        userId: user.id,
+        username: user.username,
+        nome: user.nome,
+        role: user.role,
+        permissoes: user.permissoes,
+      },
     };
   }
 }
@@ -53,7 +148,14 @@ export class UsuarioService {
       throw new Error("Senha obrigatória");
     }
     const senhaHash = await bcrypt.hash(data.senha, 10);
-    return this.usuarioRepo.create({ ...data, senhaHash });
+    return this.usuarioRepo.create({
+      ...data,
+      senhaHash,
+      permissoes:
+        data.role === "ADMIN"
+          ? undefined
+          : data.permissoes ?? DEFAULT_USUARIO_PERMISSIONS,
+    });
   }
 
   async update(id: string, data: Partial<UsuarioSistemaInput>) {
@@ -71,9 +173,26 @@ export class UsuarioService {
     if (data.senha) {
       senhaHash = await bcrypt.hash(data.senha, 10);
     }
-    const updated = await this.usuarioRepo.update(id, { ...data, senhaHash });
+    const reactivating = data.ativo === true && !existing.ativo;
+    const updated = await this.usuarioRepo.update(id, {
+      ...data,
+      senhaHash,
+      ...(reactivating ? { tentativasLogin: 0 } : {}),
+    });
     if (!updated) throw new Error("Usuário não encontrado");
     return updated;
+  }
+}
+
+export class LoginHistoricoService {
+  private loginHistoricoRepo = getLoginHistoricoRepository();
+
+  async list(limit = 100) {
+    return this.loginHistoricoRepo.list(limit);
+  }
+
+  async listByUsuario(usuarioId: string, limit = 50) {
+    return this.loginHistoricoRepo.listByUsuario(usuarioId, limit);
   }
 }
 
@@ -141,7 +260,10 @@ export class ParticipanteService {
   }
 
   async setCamisetaRetirada(camisetaId: string, retirada: boolean) {
-    const updated = await this.participanteRepo.setCamisetaRetirada(camisetaId, retirada);
+    const updated = await this.participanteRepo.setCamisetaRetirada(
+      camisetaId,
+      retirada
+    );
     if (!updated) throw new Error("Camiseta não encontrada");
     return updated;
   }

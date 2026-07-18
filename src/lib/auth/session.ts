@@ -1,5 +1,6 @@
 import type { SessionOptions } from "iron-session";
 import { getCookieSecure } from "@/lib/auth/cookie-options";
+import type { UserPermissions } from "@/lib/auth/permissions";
 import type { UserRole } from "@/lib/types";
 
 export interface SessionData {
@@ -7,6 +8,7 @@ export interface SessionData {
   username: string;
   nome: string;
   role: UserRole;
+  permissoes: UserPermissions;
   isLoggedIn: boolean;
 }
 
@@ -15,6 +17,13 @@ export const defaultSession: SessionData = {
   username: "",
   nome: "",
   role: "USUARIO",
+  permissoes: {
+    participantes: "none",
+    planejamento: "none",
+    checkin: "none",
+    retirada: "none",
+    eventos: "none",
+  },
   isLoggedIn: false,
 };
 

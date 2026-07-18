@@ -154,8 +154,10 @@ function ParticipanteCard({
 
 export default function ParticipantesList({
   eventoId,
+  canEdit = true,
 }: {
   eventoId: string | null;
+  canEdit?: boolean;
 }) {
   const router = useRouter();
   const [participantes, setParticipantes] = useState<ParticipanteCompleto[]>([]);
@@ -307,13 +309,15 @@ export default function ParticipantesList({
             <span className="hidden sm:inline">Exportar PDF</span>
             <span className="sm:hidden">PDF</span>
           </Button>
-          <Button asChild>
-            <Link href="/participantes/novo">
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Novo participante</span>
-              <span className="sm:hidden">Novo</span>
-            </Link>
-          </Button>
+          {canEdit ? (
+            <Button asChild>
+              <Link href="/participantes/novo">
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Novo participante</span>
+                <span className="sm:hidden">Novo</span>
+              </Link>
+            </Button>
+          ) : null}
         </div>
       </div>
 

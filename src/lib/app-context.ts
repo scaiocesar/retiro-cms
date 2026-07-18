@@ -2,6 +2,7 @@ import { ensureSeed } from "@/lib/db/seed";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { sessionOptions, type SessionData } from "@/lib/auth/session";
+import { syncSessionPermissions } from "@/lib/auth/sync-permissions";
 import { EventoService } from "@/lib/services";
 import { EVENTO_COOKIE } from "@/lib/auth/session";
 
@@ -11,6 +12,10 @@ export async function getAppContext() {
     await cookies(),
     sessionOptions
   );
+
+  if (session.isLoggedIn) {
+    await syncSessionPermissions(session);
+  }
 
   const eventoService = new EventoService();
   const eventosAtivos = await eventoService.listAtivos();

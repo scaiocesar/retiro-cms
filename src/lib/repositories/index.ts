@@ -1,10 +1,12 @@
 import { PostgresEventoRepository } from "@/lib/repositories/postgres/evento";
+import { PostgresLoginHistoricoRepository } from "@/lib/repositories/postgres/login-historico";
 import { PostgresParticipanteRepository } from "@/lib/repositories/postgres/participante";
 import { PostgresPlanejamentoRepository } from "@/lib/repositories/postgres/planejamento";
 import { PostgresRelatorioRepository } from "@/lib/repositories/postgres/relatorio";
 import { PostgresUsuarioRepository } from "@/lib/repositories/postgres/usuario";
 import type {
   IEventoRepository,
+  ILoginHistoricoRepository,
   IParticipanteRepository,
   IPlanejamentoRepository,
   IRelatorioRepository,
@@ -29,4 +31,8 @@ export function getRelatorioRepository(): IRelatorioRepository {
 
 export function getPlanejamentoRepository(): IPlanejamentoRepository {
   return new PostgresPlanejamentoRepository();
+}
+
+export function getLoginHistoricoRepository(): ILoginHistoricoRepository {
+  return new PostgresLoginHistoricoRepository();
 }

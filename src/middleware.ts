@@ -5,8 +5,11 @@ import { sessionOptions, type SessionData } from "@/lib/auth/session";
 
 const publicPaths = ["/login", "/api/auth/login"];
 
-const adminPaths = ["/eventos", "/usuarios"];
-
+/**
+ * Middleware só garante autenticação e bloqueia /usuarios para não-admin.
+ * Menus liberados/negados vêm do banco a cada página (getAppContext) —
+ * assim mudança de permissão vale sem logout.
+ */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -39,7 +42,7 @@ export async function middleware(request: NextRequest) {
   if (
     session.isLoggedIn &&
     session.role !== "ADMIN" &&
-    adminPaths.some((p) => pathname.startsWith(p))
+    pathname.startsWith("/usuarios")
   ) {
     return NextResponse.redirect(new URL("/", request.url));
   }

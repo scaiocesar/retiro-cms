@@ -205,6 +205,10 @@ export class InMemoryParticipanteRepository implements IParticipanteRepository {
     const camiseta = store.camisetas.get(camisetaId);
     if (!camiseta) return null;
 
+    if (retirada && camiseta.pagamento === "NAO") {
+      throw new Error("Não é possível retirar camiseta não paga");
+    }
+
     const now = new Date().toISOString();
     store.camisetas.set(camisetaId, {
       ...camiseta,

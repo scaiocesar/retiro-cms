@@ -26,8 +26,10 @@ function isPaga(camiseta: Camiseta) {
 
 export default function RetiradaPageClient({
   eventoId,
+  canEdit = true,
 }: {
   eventoId: string | null;
+  canEdit?: boolean;
 }) {
   const [participantes, setParticipantes] = useState<ParticipanteCompleto[]>([]);
   const [search, setSearch] = useState("");
@@ -65,6 +67,10 @@ export default function RetiradaPageClient({
     camiseta: Camiseta
   ) {
     const novoStatus = !camiseta.retirada;
+    if (novoStatus && !isPaga(camiseta)) {
+      toast.error("Não é possível retirar camiseta não paga");
+      return;
+    }
     setUpdatingId(camiseta.id);
     try {
       const res = await fetch(`/api/camisetas/${camiseta.id}/retirada`, {
@@ -205,7 +211,16 @@ export default function RetiradaPageClient({
                             "shrink-0",
                             c.retirada && "border-success text-success hover:bg-success/10"
                           )}
-                          disabled={updatingId === c.id}
+                          disabled={
+                            updatingId === c.id ||
+                            !canEdit ||
+                            (!c.retirada && !isPaga(c))
+                          }
+                          title={
+                            !c.retirada && !isPaga(c)
+                              ? "Camiseta não paga — não pode retirar"
+                              : undefined
+                          }
                           onClick={() => toggleRetirada(p, c)}
                         >
                           {c.retirada ? (
@@ -213,6 +228,8 @@ export default function RetiradaPageClient({
                               <Check className="h-4 w-4" />
                               Retirada
                             </>
+                          ) : !isPaga(c) ? (
+                            <>Não paga</>
                           ) : (
                             <>
                               <Package className="h-4 w-4" />

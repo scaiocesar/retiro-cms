@@ -1,6 +1,6 @@
 import { ensureSeed } from "@/lib/db/seed";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api/response";
-import { requireAdmin, requireAuth } from "@/lib/auth/helpers";
+import { requireMenuAccess, requireMenuEdit } from "@/lib/auth/helpers";
 import { ParticipanteService } from "@/lib/services";
 import { participanteSchema } from "@/lib/validations/schemas";
 
@@ -9,7 +9,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 export async function GET(_request: Request, context: RouteContext) {
   try {
     await ensureSeed();
-    await requireAuth();
+    await requireMenuAccess("participantes");
     const { id } = await context.params;
     const service = new ParticipanteService();
     const participante = await service.getById(id);
@@ -22,7 +22,7 @@ export async function GET(_request: Request, context: RouteContext) {
 export async function PATCH(request: Request, context: RouteContext) {
   try {
     await ensureSeed();
-    await requireAdmin();
+    await requireMenuEdit("participantes");
     const { id } = await context.params;
     const body = await request.json();
     const parsed = participanteSchema.safeParse(body);
@@ -41,7 +41,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 export async function DELETE(_request: Request, context: RouteContext) {
   try {
     await ensureSeed();
-    await requireAdmin();
+    await requireMenuEdit("participantes");
     const { id } = await context.params;
     const service = new ParticipanteService();
     await service.delete(id);

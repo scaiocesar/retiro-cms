@@ -14,8 +14,10 @@ import type { ParticipanteCompleto } from "@/lib/types";
 
 export default function CheckinPageClient({
   eventoId,
+  canEdit = true,
 }: {
   eventoId: string | null;
+  canEdit?: boolean;
 }) {
   const [participantes, setParticipantes] = useState<ParticipanteCompleto[]>([]);
   const [search, setSearch] = useState("");
@@ -148,7 +150,7 @@ export default function CheckinPageClient({
                     "shrink-0",
                     p.checkin && "border-success text-success hover:bg-success/10"
                   )}
-                  disabled={updatingId === p.id}
+                  disabled={updatingId === p.id || !canEdit}
                   onClick={() => toggleCheckin(p)}
                 >
                   {p.checkin ? (

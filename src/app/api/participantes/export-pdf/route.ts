@@ -1,6 +1,6 @@
 import { ensureSeed } from "@/lib/db/seed";
 import { handleApiError } from "@/lib/api/response";
-import { requireAuth } from "@/lib/auth/helpers";
+import { requireMenuAccess } from "@/lib/auth/helpers";
 import { generateParticipantesPdf } from "@/lib/participantes-export";
 import { EventoService, ParticipanteService } from "@/lib/services";
 
@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   try {
     await ensureSeed();
-    await requireAuth();
+    await requireMenuAccess("participantes");
 
     const { searchParams } = new URL(request.url);
     const eventoId = searchParams.get("eventoId");

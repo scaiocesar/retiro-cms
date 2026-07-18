@@ -3,6 +3,7 @@ import { getDb } from "@/lib/db";
 import { isBuildTime } from "@/lib/db/runtime";
 import { runMigrations } from "@/lib/db/migrate";
 import { usuarios } from "@/lib/db/schema";
+import { parsePermissionsJson } from "@/lib/auth/permissions";
 import { getUsuarioRepository } from "@/lib/repositories";
 import type { UsuarioSistema } from "@/lib/types";
 
@@ -42,6 +43,8 @@ export async function recreateAdminUser(): Promise<UsuarioSistema> {
       senhaHash: inserted.senhaHash,
       role: inserted.role,
       ativo: inserted.ativo,
+      tentativasLogin: inserted.tentativasLogin,
+      permissoes: parsePermissionsJson(inserted.permissoes, inserted.role),
       criadoEm: inserted.criadoEm,
     };
   }

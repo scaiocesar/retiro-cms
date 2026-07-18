@@ -294,8 +294,21 @@ export class PostgresParticipanteRepository implements IParticipanteRepository {
     camisetaId: string,
     retirada: boolean
   ): Promise<ParticipanteCompleto | null> {
+    const db = getDb();
+    const [existing] = await db
+      .select()
+      .from(camisetas)
+      .where(eq(camisetas.id, camisetaId))
+      .limit(1);
+
+    if (!existing) return null;
+
+    if (retirada && existing.pagamento === "NAO") {
+      throw new Error("Não é possível retirar camiseta não paga");
+    }
+
     const now = new Date().toISOString();
-    const [row] = await getDb()
+    const [row] = await db
       .update(camisetas)
       .set({
         retirada,
