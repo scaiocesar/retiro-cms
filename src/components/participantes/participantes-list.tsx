@@ -165,7 +165,9 @@ export default function ParticipantesList({
   const [pagamentoFilter, setPagamentoFilter] = useState<PagamentoFilter>("todos");
   const [servidorFilter, setServidorFilter] = useState<ServidorFilter>("todos");
   const [loading, setLoading] = useState(false);
-  const [exporting, setExporting] = useState(false);
+  const [exporting, setExporting] = useState<"participantes" | "criancas" | null>(
+    null
+  );
   const [hasSearched, setHasSearched] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -254,12 +256,13 @@ export default function ParticipantesList({
     }
   }
 
-  async function handleExportPdf() {
+  async function downloadPdf(path: string, filename: string) {
     if (!eventoId) return;
 
-    setExporting(true);
+    const kind = path.includes("criancas") ? "criancas" : "participantes";
+    setExporting(kind);
     try {
-      const res = await fetch(`/api/participantes/export-pdf?eventoId=${eventoId}`);
+      const res = await fetch(`${path}?eventoId=${eventoId}`);
       if (!res.ok) {
         toast.error("Erro ao exportar PDF");
         return;
@@ -269,15 +272,29 @@ export default function ParticipantesList({
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `participantes-${eventoId}.pdf`;
+      link.download = filename;
       link.click();
       URL.revokeObjectURL(url);
       toast.success("PDF exportado com sucesso!");
     } catch {
       toast.error("Erro de conexão");
     } finally {
-      setExporting(false);
+      setExporting(null);
     }
+  }
+
+  async function handleExportPdf() {
+    await downloadPdf(
+      "/api/participantes/export-pdf",
+      `participantes-${eventoId}.pdf`
+    );
+  }
+
+  async function handleExportCriancasPdf() {
+    await downloadPdf(
+      "/api/participantes/export-criancas-pdf",
+      `criancas-${eventoId}.pdf`
+    );
   }
 
   if (!eventoId) {
@@ -302,11 +319,24 @@ export default function ParticipantesList({
         <div className="flex shrink-0 items-center gap-2">
           <Button
             variant="outline"
+            onClick={() => void handleExportCriancasPdf()}
+            disabled={exporting !== null}
+          >
+            <Baby className="h-4 w-4" />
+            <span className="hidden sm:inline">
+              {exporting === "criancas" ? "Exportando…" : "PDF crianças"}
+            </span>
+            <span className="sm:hidden">Crianças</span>
+          </Button>
+          <Button
+            variant="outline"
             onClick={() => void handleExportPdf()}
-            disabled={exporting}
+            disabled={exporting !== null}
           >
             <Download className="h-4 w-4" />
-            <span className="hidden sm:inline">Exportar PDF</span>
+            <span className="hidden sm:inline">
+              {exporting === "participantes" ? "Exportando…" : "Exportar PDF"}
+            </span>
             <span className="sm:hidden">PDF</span>
           </Button>
           {canEdit ? (
